@@ -100,6 +100,9 @@ fn default_outer_range() -> f32 {
 fn default_edge_radius() -> f32 {
     32767.0
 }
+fn default_none_output() -> OutputTarget {
+    OutputTarget::None
+}
 fn default_exponent() -> f32 {
     1.0
 }
@@ -128,10 +131,17 @@ pub struct StickConfig {
     /// Anti dead zone / outer ring: minimum output magnitude when the stick moves,
     /// used to overcome a dead zone baked into the game itself. 0..1.
     pub anti_deadzone: f32,
-    /// Edge binding radius in Steam's 0..32767 scale. Acts as a final output
-    /// gain (32767 = no change); smaller values reach full output sooner.
+    /// Edge / outer-ring binding radius in Steam's 0..32767 scale. The
+    /// `edge_binding` fires when the raw stick magnitude crosses this radius
+    /// (Steam "Outer Ring Binding Radius"); it does NOT scale the stick output.
     #[serde(default = "default_edge_radius")]
     pub edge_radius: f32,
+    /// Action fired when the stick crosses `edge_radius`. `None` = no binding.
+    #[serde(default = "default_none_output")]
+    pub edge_binding: OutputTarget,
+    /// Invert the ring: fire `edge_binding` while *inside* the radius instead.
+    #[serde(default)]
+    pub edge_invert: bool,
     /// Smoothing filter, -10..10. 0 = off, positive smooths (slower/cleaner),
     /// negative injects artificial jitter. Applied statefully in the engine.
     #[serde(default)]
@@ -152,6 +162,8 @@ impl Default for StickConfig {
             curve_exponent: 1.0,
             anti_deadzone: 0.0,
             edge_radius: 32767.0,
+            edge_binding: OutputTarget::None,
+            edge_invert: false,
             smoothing: 0,
             invert_x: false,
             invert_y: false,

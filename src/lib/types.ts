@@ -47,6 +47,8 @@ export interface StickConfig {
   curveExponent: number;
   antiDeadzone: number;
   edgeRadius: number;
+  edgeBinding: OutputTarget;
+  edgeInvert: boolean;
   smoothing: number;
   invertX: boolean;
   invertY: boolean;
@@ -130,6 +132,8 @@ export const DEFAULT_STICK: StickConfig = {
   curveExponent: 1.0,
   antiDeadzone: 0.0,
   edgeRadius: 32767,
+  edgeBinding: { kind: "none" },
+  edgeInvert: false,
   smoothing: 0,
   invertX: false,
   invertY: false,

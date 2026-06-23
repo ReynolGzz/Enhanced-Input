@@ -5,7 +5,7 @@ use crate::profile::{InnerDeadzone, OuterShape, StickConfig, TriggerConfig};
 
 /// Apply a stick's full transform chain and return normalized output.
 /// Order: invert -> inner dead zone (+ outer-range rescale) -> magnitude curve,
-/// sensitivity, anti dead zone, edge-radius gain -> shape-aware clamp.
+/// sensitivity, anti dead zone -> shape-aware clamp.
 ///
 /// The combined output stays within the unit circle for `Circle`, and within the
 /// unit square (corners reachable) for `Default`/`Square`.
@@ -31,7 +31,6 @@ pub fn apply_stick(cfg: &StickConfig, mut x: f32, mut y: f32) -> (f32, f32) {
     // 2) Magnitude shaping. Square uses the L-infinity norm so the corners are
     //    preserved; the others use the Euclidean magnitude.
     let exp = cfg.curve.exponent_with(cfg.curve_exponent);
-    let gain = 32767.0 / cfg.edge_radius.clamp(1.0, 32767.0); // >= 1.0
     let norm = if matches!(cfg.outer_shape, OuterShape::Square) {
         nx.abs().max(ny.abs())
     } else {
@@ -44,7 +43,6 @@ pub fn apply_stick(cfg: &StickConfig, mut x: f32, mut y: f32) -> (f32, f32) {
         if anti > 0.0 && m > 0.0 {
             m = anti + (1.0 - anti) * m;
         }
-        m *= gain;
         let scale = m / norm;
         nx *= scale;
         ny *= scale;

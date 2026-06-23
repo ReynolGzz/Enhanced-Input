@@ -420,6 +420,14 @@ impl Engine {
             apply_trigger_output(&profile.left_trigger.output, lt_pressed, &mut tw, &mut lt_out);
             apply_trigger_output(&profile.right_trigger.output, rt_pressed, &mut tw, &mut rt_out);
 
+            // 5b. Outer-ring (edge) bindings: fire when the raw stick magnitude
+            //     crosses edge_radius (Steam style). Invert fires while inside.
+            let (mut ed_l, mut ed_r) = (0.0f32, 0.0f32);
+            let edge_l = edge_active(&profile.left_stick, state.lx, state.ly);
+            let edge_r = edge_active(&profile.right_stick, state.rx, state.ry);
+            apply_trigger_output(&profile.left_stick.edge_binding, edge_l, &mut tw, &mut ed_l);
+            apply_trigger_output(&profile.right_stick.edge_binding, edge_r, &mut tw, &mut ed_r);
+
             // 6. Diff keyboard state and inject edges.
             for key in desired_keys.iter() {
                 if !held_keys.contains(key) {
@@ -551,6 +559,16 @@ fn apply_trigger_output(target: &OutputTarget, pressed: bool, out: &mut TriggerO
         // Macros on triggers are not wired yet; leave the analog channel intact.
         OutputTarget::Macro { .. } => {}
     }
+}
+
+/// True when a stick's outer-ring (edge) binding should fire, from the raw input
+/// position. Magnitude is compared in Steam's 0..32767 scale; `edge_invert`
+/// flips it so the binding fires while *inside* the ring.
+#[cfg(windows)]
+fn edge_active(cfg: &crate::profile::StickConfig, x: f32, y: f32) -> bool {
+    let mag = (x * x + y * y).sqrt().min(1.0) * 32767.0;
+    let beyond = mag >= cfg.edge_radius.clamp(0.0, 32767.0);
+    beyond ^ cfg.edge_invert
 }
 
 #[cfg(not(windows))]

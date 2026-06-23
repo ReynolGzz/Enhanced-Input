@@ -13,6 +13,7 @@ import {
   CURVE_OPTIONS,
 } from "../../lib/inputs";
 import { Select, Slider, NumberSlider, Toggle, AdvField } from "../ui";
+import { BindButton } from "./BindPicker";
 
 const R = 85; // visualizer radius in px (container is 180px)
 
@@ -171,14 +172,26 @@ function StickCard({
             />
           </AdvField>
         )}
-        <AdvField label="Edge binding radius (0–32767)">
+        <AdvField label="Edge binding radius (anillo exterior, 0–32767)">
           <NumberSlider
             value={cfg.edgeRadius}
-            min={1}
+            min={0}
             max={EDGE_RADIUS_MAX}
             step={1}
             decimals={0}
             onChange={(v) => onChange({ ...cfg, edgeRadius: v })}
+          />
+        </AdvField>
+        <AdvField label="Binding del anillo exterior">
+          <BindButton
+            output={cfg.edgeBinding}
+            onChange={(o) => onChange({ ...cfg, edgeBinding: o })}
+          />
+        </AdvField>
+        <AdvField label="Invertir anillo (disparar dentro)">
+          <Toggle
+            on={cfg.edgeInvert}
+            onChange={(v) => onChange({ ...cfg, edgeInvert: v })}
           />
         </AdvField>
         <AdvField label="Suavizado (smoothing −10…10)">
