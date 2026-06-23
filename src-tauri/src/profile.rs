@@ -5,29 +5,46 @@
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
-/// Shape of the dead zone applied to an analog stick.
+/// Inner dead zone *type* — how the dead region near the center is shaped.
+/// Decoupled from the outer shape so any combination is possible.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub enum DeadzoneType {
-    /// No dead zone at all.
-    None,
-    /// Circular: ignores the combined magnitude under the inner radius.
-    Radial,
-    /// Circular + rescales the remaining range back to 0..1 (smoothest).
-    ScaledRadial,
-    /// Square: each axis gets its own independent dead zone.
-    Axial,
-    /// Cross/bowtie: axial near the center, radial towards the edge.
+pub enum InnerDeadzone {
+    /// No inner dead zone at all (truly raw center).
+    Raw,
+    /// Cross/plus: an independent dead zone per axis.
     Cross,
+    /// Circular: ignores the combined magnitude under the inner radius
+    /// (rescaled to keep the full range — the smoothest option).
+    Radial,
 }
 
-impl Default for DeadzoneType {
+impl Default for InnerDeadzone {
     fn default() -> Self {
-        DeadzoneType::ScaledRadial
+        InnerDeadzone::Radial
+    }
+}
+
+/// Outer *shape* — how the usable area is bounded toward the edge.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum OuterShape {
+    /// Leave the hardware gate as-is (the typical imperfect ~9% circle).
+    Default,
+    /// Full square: each axis can reach its max independently (corners reachable).
+    Square,
+    /// Perfect circle: the combined magnitude is clamped to 1.
+    Circle,
+}
+
+impl Default for OuterShape {
+    fn default() -> Self {
+        OuterShape::Default
     }
 }
 
 /// Named response curves. Each maps to an exponent applied to the magnitude.
+/// `Custom` uses the per-config `curve_exponent` instead of a fixed value.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ResponseCurve {
@@ -38,6 +55,8 @@ pub enum ResponseCurve {
     Relaxed,
     /// Extra fine control near the center.
     Precision,
+    /// User-defined exponent (see `curve_exponent`).
+    Custom,
 }
 
 impl Default for ResponseCurve {
@@ -46,32 +65,76 @@ impl Default for ResponseCurve {
     }
 }
 
+/// Bounds for a custom curve exponent: not "capped" at a useful value, but kept
+/// finite and positive so the app never breaks on absurd input (e.g. 1e18).
+pub const CURVE_EXPONENT_MIN: f32 = 0.01;
+pub const CURVE_EXPONENT_MAX: f32 = 10.0;
+
 impl ResponseCurve {
-    /// Exponent applied to a normalized magnitude (0..1).
-    pub fn exponent(self) -> f32 {
+    /// Exponent applied to a normalized magnitude (0..1). `custom` is the
+    /// per-config exponent used only when `self == Custom`.
+    pub fn exponent_with(self, custom: f32) -> f32 {
         match self {
             ResponseCurve::Linear => 1.0,
             ResponseCurve::Aggressive => 0.65,
             ResponseCurve::Relaxed => 1.35,
             ResponseCurve::Precision => 1.8,
+            ResponseCurve::Custom => sanitize_exponent(custom),
         }
     }
+}
+
+/// Clamp a custom exponent into the safe finite range; non-finite -> 1.0.
+pub fn sanitize_exponent(e: f32) -> f32 {
+    if e.is_finite() {
+        e.clamp(CURVE_EXPONENT_MIN, CURVE_EXPONENT_MAX)
+    } else {
+        1.0
+    }
+}
+
+fn default_outer_range() -> f32 {
+    1.0
+}
+fn default_edge_radius() -> f32 {
+    32767.0
+}
+fn default_exponent() -> f32 {
+    1.0
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StickConfig {
-    pub deadzone_type: DeadzoneType,
-    /// Inner dead zone radius, 0..1.
+    /// Inner dead zone type (raw / cross / radial).
+    #[serde(default)]
+    pub inner_type: InnerDeadzone,
+    /// Outer boundary shape (default / square / circle).
+    #[serde(default)]
+    pub outer_shape: OuterShape,
+    /// Inner dead zone radius, 0..1 (can go up to 100%).
     pub inner_deadzone: f32,
-    /// Outer dead zone, 0..1. Output reaches max before the physical edge.
-    pub outer_deadzone: f32,
+    /// Usable outer range, 0..1 (conventional: 1.0 = full range, 0 = unplayable).
+    /// Output reaches max when the input magnitude reaches this radius.
+    #[serde(default = "default_outer_range")]
+    pub outer_range: f32,
     /// Output multiplier. 1.0 = passthrough.
     pub sensitivity: f32,
     pub curve: ResponseCurve,
+    /// Exponent used when `curve == Custom`.
+    #[serde(default = "default_exponent")]
+    pub curve_exponent: f32,
     /// Anti dead zone / outer ring: minimum output magnitude when the stick moves,
     /// used to overcome a dead zone baked into the game itself. 0..1.
     pub anti_deadzone: f32,
+    /// Edge binding radius in Steam's 0..32767 scale. Acts as a final output
+    /// gain (32767 = no change); smaller values reach full output sooner.
+    #[serde(default = "default_edge_radius")]
+    pub edge_radius: f32,
+    /// Smoothing filter, -10..10. 0 = off, positive smooths (slower/cleaner),
+    /// negative injects artificial jitter. Applied statefully in the engine.
+    #[serde(default)]
+    pub smoothing: i8,
     pub invert_x: bool,
     pub invert_y: bool,
 }
@@ -79,12 +142,16 @@ pub struct StickConfig {
 impl Default for StickConfig {
     fn default() -> Self {
         StickConfig {
-            deadzone_type: DeadzoneType::default(),
+            inner_type: InnerDeadzone::default(),
+            outer_shape: OuterShape::default(),
             inner_deadzone: 0.08,
-            outer_deadzone: 0.0,
+            outer_range: 1.0,
             sensitivity: 1.0,
             curve: ResponseCurve::default(),
+            curve_exponent: 1.0,
             anti_deadzone: 0.0,
+            edge_radius: 32767.0,
+            smoothing: 0,
             invert_x: false,
             invert_y: false,
         }
@@ -101,6 +168,9 @@ pub struct TriggerConfig {
     /// Analog dead zone end, 0..1.
     pub deadzone_end: f32,
     pub curve: ResponseCurve,
+    /// Exponent used when `curve == Custom`.
+    #[serde(default = "default_exponent")]
+    pub curve_exponent: f32,
     /// Optional digital output when the trigger crosses `threshold`.
     pub output: OutputTarget,
 }
@@ -112,6 +182,7 @@ impl Default for TriggerConfig {
             deadzone_start: 0.0,
             deadzone_end: 1.0,
             curve: ResponseCurve::default(),
+            curve_exponent: 1.0,
             output: OutputTarget::Passthrough,
         }
     }
@@ -140,8 +211,12 @@ impl Default for OutputTarget {
 pub struct ButtonMapping {
     pub output: OutputTarget,
     pub turbo: bool,
-    /// Presses per second when turbo is on.
+    /// Presses per second when turbo is on (up to 100).
     pub turbo_rate_hz: f32,
+    /// When true (with turbo on), the button never registers a normal single
+    /// press: it is turbo from the first touch ("disable regular pressing").
+    #[serde(default)]
+    pub disable_regular_press: bool,
 }
 
 impl Default for ButtonMapping {
@@ -150,6 +225,7 @@ impl Default for ButtonMapping {
             output: OutputTarget::Passthrough,
             turbo: false,
             turbo_rate_hz: 12.0,
+            disable_regular_press: false,
         }
     }
 }

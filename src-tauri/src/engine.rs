@@ -85,11 +85,49 @@ impl Engine {
 
 /// Square-wave turbo gate based on how long a button has been held.
 fn turbo_active(start: Instant, rate_hz: f32) -> bool {
-    let rate = rate_hz.clamp(1.0, 40.0);
+    let rate = rate_hz.clamp(1.0, 100.0);
     let elapsed = start.elapsed().as_secs_f32();
     // Two half-periods per cycle; "on" during the first half.
     let phase = (elapsed * rate * 2.0) as u64;
     phase % 2 == 0
+}
+
+/// Initial sustained press before "hold to autofire" turbo kicks in. Skipped
+/// when the mapping has `disable_regular_press` (turbo from the first touch).
+const TURBO_HOLD_DELAY: f32 = 0.2;
+
+/// xorshift32 -> a pseudo-random f32 in [-1, 1). Used only for jitter smoothing.
+fn next_rand(state: &mut u32) -> f32 {
+    let mut x = *state;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    *state = x;
+    (x as f32 / u32::MAX as f32) * 2.0 - 1.0
+}
+
+/// Stateful smoothing filter for a stick axis pair. `level` -10..10:
+/// 0 = off, positive = exponential smoothing (cleaner but slower), negative =
+/// artificial jitter. `prev` holds the previous output for the EMA.
+fn apply_smoothing(level: i8, prev: &mut (f32, f32), rng: &mut u32, x: f32, y: f32) -> (f32, f32) {
+    let level = level.clamp(-10, 10);
+    if level == 0 {
+        *prev = (x, y);
+        return (x, y);
+    }
+    if level > 0 {
+        let alpha = (1.0 - level as f32 * 0.09).clamp(0.05, 1.0);
+        let nx = prev.0 + alpha * (x - prev.0);
+        let ny = prev.1 + alpha * (y - prev.1);
+        *prev = (nx, ny);
+        (nx, ny)
+    } else {
+        let amp = (-level) as f32 * 0.005;
+        let nx = (x + next_rand(rng) * amp).clamp(-1.0, 1.0);
+        let ny = (y + next_rand(rng) * amp).clamp(-1.0, 1.0);
+        *prev = (nx, ny);
+        (nx, ny)
+    }
 }
 
 #[cfg(windows)]
@@ -146,6 +184,10 @@ impl Engine {
         let mut state = GamepadState::default();
         let mut held_keys: HashSet<String> = HashSet::new();
         let mut turbo_start: HashMap<String, Instant> = HashMap::new();
+        // Smoothing filter state (per stick) + jitter RNG.
+        let mut smooth_l = (0.0f32, 0.0f32);
+        let mut smooth_r = (0.0f32, 0.0f32);
+        let mut rng: u32 = 0x9E37_79B9;
 
         while self.running.load(Ordering::SeqCst) {
             // 1. Read newest physical state (keep previous on timeout).
@@ -161,9 +203,13 @@ impl Engine {
             let profile = self.profile.read().clone();
             let now = Instant::now();
 
-            // 2. Sticks.
+            // 2. Sticks (transform, then stateful smoothing filter).
             let (out_lx, out_ly) = transform::apply_stick(&profile.left_stick, state.lx, state.ly);
             let (out_rx, out_ry) = transform::apply_stick(&profile.right_stick, state.rx, state.ry);
+            let (out_lx, out_ly) =
+                apply_smoothing(profile.left_stick.smoothing, &mut smooth_l, &mut rng, out_lx, out_ly);
+            let (out_rx, out_ry) =
+                apply_smoothing(profile.right_stick.smoothing, &mut smooth_r, &mut rng, out_rx, out_ry);
 
             // 3. Triggers (analog passthrough by default).
             let lt = transform::apply_trigger(&profile.left_trigger, state.lt);
@@ -183,7 +229,15 @@ impl Engine {
                 // Turbo gating.
                 let active = if pressed && mapping.turbo {
                     let start = *turbo_start.entry(id.to_string()).or_insert(now);
-                    turbo_active(start, mapping.turbo_rate_hz)
+                    // Without "disable regular pressing", the first moment is a
+                    // normal press and autofire only starts after a short hold.
+                    if !mapping.disable_regular_press
+                        && start.elapsed().as_secs_f32() < TURBO_HOLD_DELAY
+                    {
+                        true
+                    } else {
+                        turbo_active(start, mapping.turbo_rate_hz)
+                    }
                 } else {
                     if !pressed {
                         turbo_start.remove(id);

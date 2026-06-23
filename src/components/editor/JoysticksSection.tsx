@@ -1,12 +1,18 @@
 import type {
   Profile,
   StickConfig,
-  DeadzoneType,
+  InnerDeadzone,
+  OuterShape,
   ResponseCurve,
   LivePreview,
 } from "../../lib/types";
-import { DEADZONE_OPTIONS, CURVE_OPTIONS } from "../../lib/inputs";
-import { Select, Slider, Toggle, AdvField, pct } from "../ui";
+import { CURVE_EXPONENT_MIN, CURVE_EXPONENT_MAX, EDGE_RADIUS_MAX } from "../../lib/types";
+import {
+  INNER_TYPE_OPTIONS,
+  OUTER_SHAPE_OPTIONS,
+  CURVE_OPTIONS,
+} from "../../lib/inputs";
+import { Select, Slider, NumberSlider, Toggle, AdvField } from "../ui";
 
 const R = 85; // visualizer radius in px (container is 180px)
 
@@ -17,6 +23,8 @@ function StickViz({
   outY,
   inner,
   outer,
+  innerType,
+  outerShape,
 }: {
   inX: number;
   inY: number;
@@ -24,27 +32,36 @@ function StickViz({
   outY: number;
   inner: number;
   outer: number;
+  innerType: InnerDeadzone;
+  outerShape: OuterShape;
 }) {
   const innerR = inner * R;
-  const outerR = (1 - outer) * R;
-  const ring = (r: number) => ({
+  const outerR = outer * R;
+  const ring = (r: number, square: boolean) => ({
     width: 2 * r,
     height: 2 * r,
     left: 90 - r,
     top: 90 - r,
+    borderRadius: square ? 4 : "50%",
   });
   return (
     <div className="stick-viz">
-      <div className="ring" style={ring(innerR)} />
-      <div className="ring" style={ring(outerR)} />
-      <div
-        className="dot-in"
-        style={{ left: 90 + inX * R, top: 90 - inY * R }}
-      />
-      <div
-        className="dot-out"
-        style={{ left: 90 + outX * R, top: 90 - outY * R }}
-      />
+      <div className="ring" style={ring(outerR, outerShape === "square")} />
+      {innerType === "radial" && <div className="ring" style={ring(innerR, false)} />}
+      {innerType === "cross" && (
+        <>
+          <div
+            className="cross-band"
+            style={{ width: 2 * innerR, height: 2 * R, left: 90 - innerR, top: 90 - R }}
+          />
+          <div
+            className="cross-band"
+            style={{ width: 2 * R, height: 2 * innerR, left: 90 - R, top: 90 - innerR }}
+          />
+        </>
+      )}
+      <div className="dot-in" style={{ left: 90 + inX * R, top: 90 - inY * R }} />
+      <div className="dot-out" style={{ left: 90 + outX * R, top: 90 - outY * R }} />
     </div>
   );
 }
@@ -74,54 +91,66 @@ function StickCard({
         outX={outX}
         outY={outY}
         inner={cfg.innerDeadzone}
-        outer={cfg.outerDeadzone}
+        outer={cfg.outerRange}
+        innerType={cfg.innerType}
+        outerShape={cfg.outerShape}
       />
       <div className="stick-fields">
         <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 2 }}>
           {label}
         </div>
-        <AdvField label="Tipo de zona muerta">
+        <AdvField label="Tipo de zona muerta (interior)">
           <Select
-            value={cfg.deadzoneType}
-            options={DEADZONE_OPTIONS}
-            onChange={(v) => onChange({ ...cfg, deadzoneType: v as DeadzoneType })}
+            value={cfg.innerType}
+            options={INNER_TYPE_OPTIONS}
+            onChange={(v) => onChange({ ...cfg, innerType: v as InnerDeadzone })}
+          />
+        </AdvField>
+        <AdvField label="Forma exterior">
+          <Select
+            value={cfg.outerShape}
+            options={OUTER_SHAPE_OPTIONS}
+            onChange={(v) => onChange({ ...cfg, outerShape: v as OuterShape })}
           />
         </AdvField>
         <AdvField label="Zona muerta interior">
-          <Slider
-            value={cfg.innerDeadzone}
+          <NumberSlider
+            value={cfg.innerDeadzone * 100}
             min={0}
-            max={0.5}
-            onChange={(v) => onChange({ ...cfg, innerDeadzone: v })}
-            format={pct}
+            max={100}
+            step={0.5}
+            suffix="%"
+            onChange={(v) => onChange({ ...cfg, innerDeadzone: v / 100 })}
           />
         </AdvField>
-        <AdvField label="Zona muerta exterior">
-          <Slider
-            value={cfg.outerDeadzone}
+        <AdvField label="Rango exterior (100% = rango completo)">
+          <NumberSlider
+            value={cfg.outerRange * 100}
             min={0}
-            max={0.5}
-            onChange={(v) => onChange({ ...cfg, outerDeadzone: v })}
-            format={pct}
+            max={100}
+            step={0.5}
+            suffix="%"
+            onChange={(v) => onChange({ ...cfg, outerRange: v / 100 })}
           />
         </AdvField>
         <AdvField label="Sensibilidad">
-          <Slider
+          <NumberSlider
             value={cfg.sensitivity}
             min={0.1}
-            max={3}
+            max={5}
             step={0.05}
+            suffix="x"
             onChange={(v) => onChange({ ...cfg, sensitivity: v })}
-            format={(v) => `${v.toFixed(2)}x`}
           />
         </AdvField>
         <AdvField label="Anti zona muerta (anillo exterior)">
-          <Slider
-            value={cfg.antiDeadzone}
+          <NumberSlider
+            value={cfg.antiDeadzone * 100}
             min={0}
-            max={0.5}
-            onChange={(v) => onChange({ ...cfg, antiDeadzone: v })}
-            format={pct}
+            max={95}
+            step={0.5}
+            suffix="%"
+            onChange={(v) => onChange({ ...cfg, antiDeadzone: v / 100 })}
           />
         </AdvField>
         <AdvField label="Curva de respuesta">
@@ -129,6 +158,37 @@ function StickCard({
             value={cfg.curve}
             options={CURVE_OPTIONS}
             onChange={(v) => onChange({ ...cfg, curve: v as ResponseCurve })}
+          />
+        </AdvField>
+        {cfg.curve === "custom" && (
+          <AdvField label="Exponente de la curva">
+            <NumberSlider
+              value={cfg.curveExponent}
+              min={CURVE_EXPONENT_MIN}
+              max={CURVE_EXPONENT_MAX}
+              step={0.01}
+              onChange={(v) => onChange({ ...cfg, curveExponent: v })}
+            />
+          </AdvField>
+        )}
+        <AdvField label="Edge binding radius (0–32767)">
+          <NumberSlider
+            value={cfg.edgeRadius}
+            min={1}
+            max={EDGE_RADIUS_MAX}
+            step={1}
+            decimals={0}
+            onChange={(v) => onChange({ ...cfg, edgeRadius: v })}
+          />
+        </AdvField>
+        <AdvField label="Suavizado (smoothing −10…10)">
+          <Slider
+            value={cfg.smoothing}
+            min={-10}
+            max={10}
+            step={1}
+            onChange={(v) => onChange({ ...cfg, smoothing: Math.round(v) })}
+            format={(v) => `${Math.round(v)}`}
           />
         </AdvField>
         <AdvField label="Invertir eje X">
@@ -155,8 +215,9 @@ export function JoysticksSection({
     <div>
       <h2 className="section-title">Joysticks</h2>
       <p className="section-desc">
-        Tipo y tamaño de zona muerta, sensibilidad, curva y anti zona muerta. El
-        punto azul es la señal de salida en tiempo real.
+        Combina el tipo de zona muerta interior con la forma exterior, ajusta
+        sensibilidad, curva, suavizado y más. El punto azul es la señal de salida
+        en tiempo real.
       </p>
       <StickCard
         label="Joystick izquierdo"

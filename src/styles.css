@@ -464,8 +464,27 @@ input[type="range"] {
   height: 4px;
   border-radius: 4px;
   background: var(--border);
-  width: 260px;
+  width: 200px;
   outline: none;
+}
+/* Editable numeric box paired with a slider. */
+.slider-row .snum {
+  width: 68px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.slider-row .snum:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.slider-row .suffix {
+  color: var(--text-dim);
+  min-width: 18px;
 }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -516,13 +535,14 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .advanced .adv-grid {
   display: grid;
-  gap: 14px;
+  gap: 18px;
 }
 .adv-field {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  padding: 2px 0;
 }
 .adv-field .lbl {
   color: var(--text-dim);
@@ -554,6 +574,12 @@ input[type="range"]::-webkit-slider-thumb {
   border-radius: 50%;
   border: 1px dashed var(--border);
 }
+/* Cross-shaped inner dead zone bands. */
+.stick-viz .cross-band {
+  position: absolute;
+  background: rgba(120, 140, 170, 0.12);
+  border: 1px dashed var(--border);
+}
 .stick-viz .dot-in,
 .stick-viz .dot-out {
   position: absolute;
@@ -574,7 +600,7 @@ input[type="range"]::-webkit-slider-thumb {
 .stick-fields {
   flex: 1;
   display: grid;
-  gap: 16px;
+  gap: 18px;
 }
 
 .modal-backdrop {

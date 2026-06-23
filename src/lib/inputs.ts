@@ -70,12 +70,18 @@ export const KEY_TARGETS: { value: string; label: string }[] = [
   { value: "f4", label: "F4" },
 ];
 
-export const DEADZONE_OPTIONS: { value: string; label: string }[] = [
-  { value: "none", label: "Sin zona muerta" },
-  { value: "scaledRadial", label: "Círculo (reescalado)" },
-  { value: "radial", label: "Círculo" },
-  { value: "axial", label: "Cuadrado (por eje)" },
+// Inner dead zone type (how the center is shaped).
+export const INNER_TYPE_OPTIONS: { value: string; label: string }[] = [
+  { value: "raw", label: "Sin zona muerta (raw)" },
   { value: "cross", label: "Cruz" },
+  { value: "radial", label: "Circular / radial" },
+];
+
+// Outer boundary shape.
+export const OUTER_SHAPE_OPTIONS: { value: string; label: string }[] = [
+  { value: "default", label: "Default (círculo nativo)" },
+  { value: "square", label: "Cuadrado" },
+  { value: "circle", label: "Círculo perfecto" },
 ];
 
 export const CURVE_OPTIONS: { value: string; label: string }[] = [
@@ -83,4 +89,5 @@ export const CURVE_OPTIONS: { value: string; label: string }[] = [
   { value: "aggressive", label: "Agresiva" },
   { value: "relaxed", label: "Relajada" },
   { value: "precision", label: "Precisión" },
+  { value: "custom", label: "Custom" },
 ];

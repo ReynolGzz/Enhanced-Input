@@ -1,6 +1,7 @@
 import type { Profile, TriggerConfig, ResponseCurve } from "../../lib/types";
+import { CURVE_EXPONENT_MIN, CURVE_EXPONENT_MAX } from "../../lib/types";
 import { CURVE_OPTIONS } from "../../lib/inputs";
-import { Select, Slider, AdvField, pct } from "../ui";
+import { Select, NumberSlider, AdvField } from "../ui";
 import { BindSelect } from "./ButtonRow";
 
 function TriggerCard({
@@ -23,30 +24,33 @@ function TriggerCard({
 
       <div className="adv-grid">
         <AdvField label="Umbral de pulsación (digital)">
-          <Slider
-            value={cfg.threshold}
+          <NumberSlider
+            value={cfg.threshold * 100}
             min={0}
-            max={1}
-            onChange={(v) => onChange({ ...cfg, threshold: v })}
-            format={pct}
+            max={100}
+            step={0.5}
+            suffix="%"
+            onChange={(v) => onChange({ ...cfg, threshold: v / 100 })}
           />
         </AdvField>
         <AdvField label="Inicio de recorrido (zona muerta)">
-          <Slider
-            value={cfg.deadzoneStart}
+          <NumberSlider
+            value={cfg.deadzoneStart * 100}
             min={0}
-            max={0.9}
-            onChange={(v) => onChange({ ...cfg, deadzoneStart: v })}
-            format={pct}
+            max={90}
+            step={0.5}
+            suffix="%"
+            onChange={(v) => onChange({ ...cfg, deadzoneStart: v / 100 })}
           />
         </AdvField>
         <AdvField label="Fin de recorrido">
-          <Slider
-            value={cfg.deadzoneEnd}
-            min={0.1}
-            max={1}
-            onChange={(v) => onChange({ ...cfg, deadzoneEnd: v })}
-            format={pct}
+          <NumberSlider
+            value={cfg.deadzoneEnd * 100}
+            min={10}
+            max={100}
+            step={0.5}
+            suffix="%"
+            onChange={(v) => onChange({ ...cfg, deadzoneEnd: v / 100 })}
           />
         </AdvField>
         <AdvField label="Curva de respuesta">
@@ -56,6 +60,17 @@ function TriggerCard({
             onChange={(v) => onChange({ ...cfg, curve: v as ResponseCurve })}
           />
         </AdvField>
+        {cfg.curve === "custom" && (
+          <AdvField label="Exponente de la curva">
+            <NumberSlider
+              value={cfg.curveExponent}
+              min={CURVE_EXPONENT_MIN}
+              max={CURVE_EXPONENT_MAX}
+              step={0.01}
+              onChange={(v) => onChange({ ...cfg, curveExponent: v })}
+            />
+          </AdvField>
+        )}
         <AdvField label="Reasignar pulsación a">
           <BindSelect
             output={cfg.output}

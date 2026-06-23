@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { ButtonMapping, OutputTarget } from "../../lib/types";
 import type { ButtonDef } from "../../lib/inputs";
 import { GAMEPAD_TARGETS, KEY_TARGETS } from "../../lib/inputs";
-import { Slider, Toggle, AdvField } from "../ui";
+import { NumberSlider, Toggle, AdvField } from "../ui";
 
 function encode(o: OutputTarget): string {
   switch (o.kind) {
@@ -105,16 +105,26 @@ export function ButtonRow({
               />
             </AdvField>
             {mapping.turbo && (
-              <AdvField label="Velocidad de turbo">
-                <Slider
-                  value={mapping.turboRateHz}
-                  min={1}
-                  max={30}
-                  step={1}
-                  onChange={(v) => onChange({ ...mapping, turboRateHz: v })}
-                  format={(v) => `${Math.round(v)}/s`}
-                />
-              </AdvField>
+              <>
+                <AdvField label="Velocidad de turbo">
+                  <NumberSlider
+                    value={mapping.turboRateHz}
+                    min={1}
+                    max={100}
+                    step={1}
+                    suffix="/s"
+                    onChange={(v) => onChange({ ...mapping, turboRateHz: v })}
+                  />
+                </AdvField>
+                <AdvField label="Disable regular pressing (turbo desde el primer toque)">
+                  <Toggle
+                    on={mapping.disableRegularPress}
+                    onChange={(v) =>
+                      onChange({ ...mapping, disableRegularPress: v })
+                    }
+                  />
+                </AdvField>
+              </>
             )}
           </div>
         </div>

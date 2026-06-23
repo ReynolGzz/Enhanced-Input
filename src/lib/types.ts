@@ -1,18 +1,19 @@
 // Mirrors the Rust profile model in `src-tauri/src/profile.rs`.
 // Keep field names (camelCase) in sync with the serde definitions.
 
-export type DeadzoneType =
-  | "none"
-  | "radial"
-  | "scaledRadial"
-  | "axial"
-  | "cross";
+// Inner dead zone type (how the center is shaped) — decoupled from the outer
+// shape so any combination is possible.
+export type InnerDeadzone = "raw" | "cross" | "radial";
+
+// Outer boundary shape.
+export type OuterShape = "default" | "square" | "circle";
 
 export type ResponseCurve =
   | "linear"
   | "aggressive"
   | "relaxed"
-  | "precision";
+  | "precision"
+  | "custom";
 
 export type OutputTarget =
   | { kind: "passthrough" }
@@ -21,12 +22,16 @@ export type OutputTarget =
   | { kind: "key"; code: string };
 
 export interface StickConfig {
-  deadzoneType: DeadzoneType;
+  innerType: InnerDeadzone;
+  outerShape: OuterShape;
   innerDeadzone: number;
-  outerDeadzone: number;
+  outerRange: number;
   sensitivity: number;
   curve: ResponseCurve;
+  curveExponent: number;
   antiDeadzone: number;
+  edgeRadius: number;
+  smoothing: number;
   invertX: boolean;
   invertY: boolean;
 }
@@ -36,6 +41,7 @@ export interface TriggerConfig {
   deadzoneStart: number;
   deadzoneEnd: number;
   curve: ResponseCurve;
+  curveExponent: number;
   output: OutputTarget;
 }
 
@@ -43,7 +49,14 @@ export interface ButtonMapping {
   output: OutputTarget;
   turbo: boolean;
   turboRateHz: number;
+  disableRegularPress: boolean;
 }
+
+// Bounds for a custom curve exponent (mirrors profile.rs).
+export const CURVE_EXPONENT_MIN = 0.01;
+export const CURVE_EXPONENT_MAX = 10.0;
+// Steam-style edge binding radius range.
+export const EDGE_RADIUS_MAX = 32767;
 
 export interface Profile {
   id: string;
@@ -92,12 +105,16 @@ export interface LivePreview {
 }
 
 export const DEFAULT_STICK: StickConfig = {
-  deadzoneType: "scaledRadial",
+  innerType: "radial",
+  outerShape: "default",
   innerDeadzone: 0.08,
-  outerDeadzone: 0.0,
+  outerRange: 1.0,
   sensitivity: 1.0,
   curve: "linear",
+  curveExponent: 1.0,
   antiDeadzone: 0.0,
+  edgeRadius: 32767,
+  smoothing: 0,
   invertX: false,
   invertY: false,
 };
@@ -107,6 +124,7 @@ export const DEFAULT_TRIGGER: TriggerConfig = {
   deadzoneStart: 0.0,
   deadzoneEnd: 1.0,
   curve: "linear",
+  curveExponent: 1.0,
   output: { kind: "passthrough" },
 };
 
@@ -114,4 +132,5 @@ export const DEFAULT_MAPPING: ButtonMapping = {
   output: { kind: "passthrough" },
   turbo: false,
   turboRateHz: 12,
+  disableRegularPress: false,
 };
