@@ -146,14 +146,11 @@ button {
 }
 
 .conn-icon {
-  height: 14px;
+  height: 13px;
   width: auto;
-  vertical-align: -4px;
-  margin-right: 6px;
-  padding: 2px 5px;
-  background: #eef2f7;
-  border-radius: 6px;
-  box-sizing: content-box;
+  vertical-align: -2px;
+  margin: 0 5px 0 3px;
+  opacity: 0.9;
 }
 
 .controller-name {
