@@ -138,7 +138,7 @@ button {
   width: 64px;
   height: 48px;
   object-fit: contain;
-  background: #ffffff;
+  background: var(--bg-elev-2);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 4px;
