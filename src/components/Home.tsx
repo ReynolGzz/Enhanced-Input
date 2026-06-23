@@ -50,6 +50,7 @@ export function Home({
   onManageProfiles,
   onEditProfile,
   onToggleEngine,
+  onOpenSettings,
 }: {
   controllers: ControllerInfo[];
   profiles: ProfileSummary[];
@@ -60,6 +61,7 @@ export function Home({
   onManageProfiles: () => void;
   onEditProfile: () => void;
   onToggleEngine: () => void;
+  onOpenSettings: () => void;
 }) {
   const controller = controllers[0] ?? null;
   const activeProfile =
@@ -70,14 +72,24 @@ export function Home({
   return (
     <div className="home">
       <div className="home-top">
-        <div className="home-title">
-          <img
-            className="logo-mark"
-            src="/logo.jpg"
-            alt="Enhanced Input"
-            draggable={false}
-          />
-          <h1>Enhanced Input</h1>
+        <div className="home-header">
+          <div className="home-title">
+            <img
+              className="logo-mark"
+              src="/logo.jpg"
+              alt="Enhanced Input"
+              draggable={false}
+            />
+            <h1>Enhanced Input</h1>
+          </div>
+          <div className="home-actions">
+            <button className="btn ghost" onClick={onManageProfiles}>
+              Perfiles
+            </button>
+            <button className="icon-btn" onClick={onOpenSettings} title="Ajustes">
+              ⚙
+            </button>
+          </div>
         </div>
 
         <div className="controllers-head">
@@ -139,9 +151,6 @@ export function Home({
                   </option>
                 ))}
               </select>
-              <button className="btn ghost" onClick={onManageProfiles}>
-                Perfiles
-              </button>
               <button className="btn" onClick={onNewProfile}>
                 Nuevo
               </button>

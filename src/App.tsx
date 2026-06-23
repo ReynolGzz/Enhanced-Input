@@ -8,6 +8,7 @@ import type {
 } from "./lib/types";
 import { Home } from "./components/Home";
 import { ProfilesModal } from "./components/ProfilesModal";
+import { SettingsModal } from "./components/SettingsModal";
 import { ProfileEditor } from "./components/editor/ProfileEditor";
 import { checkForUpdate, type UpdateInfo } from "./lib/updater";
 
@@ -32,6 +33,7 @@ export default function App() {
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
   const [showProfiles, setShowProfiles] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [update, setUpdate] = useState<UpdateInfo | null>(null);
   const [updating, setUpdating] = useState(false);
 
@@ -228,6 +230,7 @@ export default function App() {
         onManageProfiles={() => setShowProfiles(true)}
         onEditProfile={handleEdit}
         onToggleEngine={handleToggleEngine}
+        onOpenSettings={() => setShowSettings(true)}
       />
 
       {showProfiles && (
@@ -238,6 +241,8 @@ export default function App() {
           onChanged={handleProfilesChanged}
         />
       )}
+
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
 
       {showNew && (
         <div className="modal-backdrop" onClick={() => setShowNew(false)}>
