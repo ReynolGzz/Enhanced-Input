@@ -550,16 +550,16 @@ input[type="range"]::-webkit-slider-thumb {
   margin: -8px 0 12px;
   padding: 16px 18px;
 }
-.advanced .adv-grid {
+.adv-grid {
   display: grid;
-  gap: 18px;
+  gap: 22px;
 }
 .adv-field {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 2px 0;
+  padding: 5px 0;
 }
 .adv-field .lbl {
   color: var(--text-dim);

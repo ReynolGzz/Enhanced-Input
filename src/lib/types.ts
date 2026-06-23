@@ -70,7 +70,7 @@ export interface ButtonMapping {
 
 // Bounds for a custom curve exponent (mirrors profile.rs).
 export const CURVE_EXPONENT_MIN = 0.01;
-export const CURVE_EXPONENT_MAX = 10.0;
+export const CURVE_EXPONENT_MAX = 1000;
 // Steam-style edge binding radius range.
 export const EDGE_RADIUS_MAX = 32767;
 

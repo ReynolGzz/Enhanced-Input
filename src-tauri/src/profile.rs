@@ -65,10 +65,11 @@ impl Default for ResponseCurve {
     }
 }
 
-/// Bounds for a custom curve exponent: not "capped" at a useful value, but kept
-/// finite and positive so the app never breaks on absurd input (e.g. 1e18).
+/// Bounds for a custom curve exponent. Deliberately wide (not capped at a
+/// "useful" value) so the user owns the full usable range; only kept finite and
+/// positive so the app never breaks on absurd input (e.g. 1e18 -> clamped).
 pub const CURVE_EXPONENT_MIN: f32 = 0.01;
-pub const CURVE_EXPONENT_MAX: f32 = 10.0;
+pub const CURVE_EXPONENT_MAX: f32 = 1000.0;
 
 impl ResponseCurve {
     /// Exponent applied to a normalized magnitude (0..1). `custom` is the
