@@ -637,3 +637,111 @@ input[type="range"]::-webkit-slider-thumb {
   font-size: 12.5px;
   color: var(--text-dim);
 }
+
+/* Bind picker (tabbed rebind modal) */
+.bind-btn {
+  min-width: 150px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.bind-btn:hover {
+  border-color: var(--accent);
+}
+.modal.bind-modal {
+  width: min(760px, 92vw);
+  padding: 0;
+  overflow: hidden;
+}
+.bind-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.bind-tabs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.bind-tab {
+  padding: 7px 12px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 13px;
+  cursor: pointer;
+}
+.bind-tab:hover {
+  background: var(--bg-elev-2);
+}
+.bind-tab.active {
+  background: var(--bg-elev-2);
+  color: var(--text);
+  border-color: var(--accent);
+}
+.bind-close {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 16px;
+  cursor: pointer;
+}
+.bind-quick {
+  display: flex;
+  gap: 8px;
+  padding: 12px 14px 0;
+}
+.chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev-2);
+  color: var(--text-dim);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+.chip:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.bind-body {
+  padding: 14px;
+  max-height: 56vh;
+  overflow-y: auto;
+}
+.bind-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 8px;
+}
+.bind-keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bind-krow {
+  display: flex;
+  gap: 6px;
+}
+.bind-key {
+  padding: 9px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev-2);
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  flex: 1;
+}
+.bind-key:hover {
+  border-color: var(--accent);
+  background: var(--bg-elev);
+}

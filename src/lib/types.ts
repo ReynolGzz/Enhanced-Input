@@ -19,7 +19,9 @@ export type OutputTarget =
   | { kind: "passthrough" }
   | { kind: "none" }
   | { kind: "gamepad"; button: string }
-  | { kind: "key"; code: string };
+  | { kind: "key"; code: string }
+  // button ∈ left|right|middle|x1|x2|wheelup|wheeldown
+  | { kind: "mouse"; button: string };
 
 export interface StickConfig {
   innerType: InnerDeadzone;

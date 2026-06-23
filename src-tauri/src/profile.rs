@@ -190,7 +190,7 @@ impl Default for TriggerConfig {
 
 /// What an input control emits. `Passthrough` keeps the original signal,
 /// `None` disables it, `Gamepad` remaps to another virtual-pad button,
-/// `Key` injects a keyboard key.
+/// `Key` injects a keyboard key, `Mouse` a mouse button or wheel tick.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum OutputTarget {
@@ -198,6 +198,8 @@ pub enum OutputTarget {
     None,
     Gamepad { button: String },
     Key { code: String },
+    /// `button` ∈ left|right|middle|x1|x2|wheelup|wheeldown.
+    Mouse { button: String },
 }
 
 impl Default for OutputTarget {

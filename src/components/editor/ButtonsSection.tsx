@@ -41,8 +41,8 @@ export function ButtonsSection({
     <div>
       <h2 className="section-title">Botones</h2>
       <p className="section-desc">
-        Reasigna cualquier botón a otro botón del mando o a una tecla. Activa
-        turbo en el engranaje.
+        Reasigna cualquier botón a otro botón del mando, una tecla o el ratón.
+        Activa turbo en el engranaje.
       </p>
 
       <div className="group-label">Botones delanteros</div>

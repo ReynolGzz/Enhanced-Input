@@ -4,6 +4,7 @@ mod commands;
 mod engine;
 mod input;
 mod keyboard;
+mod mouse;
 mod output;
 mod profile;
 mod storage;

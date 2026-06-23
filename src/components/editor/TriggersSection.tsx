@@ -2,7 +2,7 @@ import type { Profile, TriggerConfig, ResponseCurve } from "../../lib/types";
 import { CURVE_EXPONENT_MIN, CURVE_EXPONENT_MAX } from "../../lib/types";
 import { CURVE_OPTIONS } from "../../lib/inputs";
 import { Select, NumberSlider, AdvField } from "../ui";
-import { BindSelect } from "./ButtonRow";
+import { BindButton } from "./BindPicker";
 
 function TriggerCard({
   label,
@@ -72,7 +72,7 @@ function TriggerCard({
           </AdvField>
         )}
         <AdvField label="Reasignar pulsación a">
-          <BindSelect
+          <BindButton
             output={cfg.output}
             onChange={(o) => onChange({ ...cfg, output: o })}
           />

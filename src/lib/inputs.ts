@@ -91,3 +91,114 @@ export const CURVE_OPTIONS: { value: string; label: string }[] = [
   { value: "precision", label: "Precisión" },
   { value: "custom", label: "Custom" },
 ];
+
+// Mouse targets you can remap a control to (matches mouse.rs).
+export const MOUSE_TARGETS: { value: string; label: string }[] = [
+  { value: "left", label: "Click izquierdo" },
+  { value: "right", label: "Click derecho" },
+  { value: "middle", label: "Click central" },
+  { value: "x1", label: "Botón 4" },
+  { value: "x2", label: "Botón 5" },
+  { value: "wheelup", label: "Rueda ↑" },
+  { value: "wheeldown", label: "Rueda ↓" },
+];
+
+// A key on the visual keyboard/numpad layouts. `w` is a relative width unit.
+export interface KeyCell {
+  value: string; // matches keyboard.rs scancode names
+  label: string;
+  w?: number;
+}
+
+// Compact visual keyboard layout for the rebind picker.
+export const KEYBOARD_ROWS: KeyCell[][] = [
+  [
+    { value: "esc", label: "Esc" },
+    ...["f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12"].map(
+      (f) => ({ value: f, label: f.toUpperCase() })
+    ),
+  ],
+  [
+    { value: "backtick", label: "`" },
+    ..."1234567890".split("").map((c) => ({ value: c, label: c })),
+    { value: "minus", label: "-" },
+    { value: "equals", label: "=" },
+    { value: "backspace", label: "⌫", w: 2 },
+  ],
+  [
+    { value: "tab", label: "Tab", w: 1.5 },
+    ..."qwertyuiop".split("").map((c) => ({ value: c, label: c.toUpperCase() })),
+    { value: "lbracket", label: "[" },
+    { value: "rbracket", label: "]" },
+    { value: "backslash", label: "\\" },
+  ],
+  [
+    { value: "capslock", label: "Caps", w: 1.8 },
+    ..."asdfghjkl".split("").map((c) => ({ value: c, label: c.toUpperCase() })),
+    { value: "semicolon", label: ";" },
+    { value: "quote", label: "'" },
+    { value: "enter", label: "Enter", w: 2 },
+  ],
+  [
+    { value: "shift", label: "Shift", w: 2.3 },
+    ..."zxcvbnm".split("").map((c) => ({ value: c, label: c.toUpperCase() })),
+    { value: "comma", label: "," },
+    { value: "period", label: "." },
+    { value: "slash", label: "/" },
+    { value: "rshift", label: "Shift", w: 2.3 },
+  ],
+  [
+    { value: "ctrl", label: "Ctrl", w: 1.5 },
+    { value: "alt", label: "Alt", w: 1.5 },
+    { value: "space", label: "Espacio", w: 6 },
+    { value: "ralt", label: "Alt", w: 1.5 },
+    { value: "rctrl", label: "Ctrl", w: 1.5 },
+  ],
+  [
+    { value: "up", label: "↑" },
+    { value: "down", label: "↓" },
+    { value: "left", label: "←" },
+    { value: "right", label: "→" },
+  ],
+];
+
+// Numpad + navigation cluster for the rebind picker.
+export const NUMPAD_ROWS: KeyCell[][] = [
+  [
+    { value: "numlock", label: "Num" },
+    { value: "numdivide", label: "/" },
+    { value: "nummultiply", label: "*" },
+    { value: "numminus", label: "-" },
+  ],
+  [
+    { value: "num7", label: "7" },
+    { value: "num8", label: "8" },
+    { value: "num9", label: "9" },
+    { value: "numplus", label: "+" },
+  ],
+  [
+    { value: "num4", label: "4" },
+    { value: "num5", label: "5" },
+    { value: "num6", label: "6" },
+  ],
+  [
+    { value: "num1", label: "1" },
+    { value: "num2", label: "2" },
+    { value: "num3", label: "3" },
+    { value: "numenter", label: "Enter" },
+  ],
+  [
+    { value: "num0", label: "0", w: 2 },
+    { value: "numdot", label: "." },
+  ],
+  [
+    { value: "insert", label: "Ins" },
+    { value: "home", label: "Home" },
+    { value: "pageup", label: "PgUp" },
+  ],
+  [
+    { value: "delete", label: "Del" },
+    { value: "end", label: "End" },
+    { value: "pagedown", label: "PgDn" },
+  ],
+];

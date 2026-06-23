@@ -183,6 +183,9 @@ impl Engine {
 
         let mut state = GamepadState::default();
         let mut held_keys: HashSet<String> = HashSet::new();
+        let mut held_mouse: HashSet<String> = HashSet::new();
+        let mut wheel_up_held = false;
+        let mut wheel_down_held = false;
         let mut turbo_start: HashMap<String, Instant> = HashMap::new();
         // Smoothing filter state (per stick) + jitter RNG.
         let mut smooth_l = (0.0f32, 0.0f32);
@@ -215,9 +218,12 @@ impl Engine {
             let lt = transform::apply_trigger(&profile.left_trigger, state.lt);
             let rt = transform::apply_trigger(&profile.right_trigger, state.rt);
 
-            // 4. Buttons -> output bits + desired keys.
+            // 4. Buttons -> output bits + desired keys / mouse.
             let mut out_bits: u16 = 0;
             let mut desired_keys: HashSet<String> = HashSet::new();
+            let mut desired_mouse: HashSet<String> = HashSet::new();
+            let mut wheel_up = false;
+            let mut wheel_down = false;
             let mut pressed_ids: Vec<String> = Vec::new();
 
             for (id, pressed) in state.buttons.iter() {
@@ -262,6 +268,17 @@ impl Engine {
                             desired_keys.insert(code.clone());
                         }
                     }
+                    OutputTarget::Mouse { button } => {
+                        if active {
+                            match button.as_str() {
+                                "wheelup" => wheel_up = true,
+                                "wheeldown" => wheel_down = true,
+                                other => {
+                                    desired_mouse.insert(other.to_string());
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -270,20 +287,15 @@ impl Engine {
             let rt_pressed = rt >= profile.right_trigger.threshold;
             let mut lt_out = lt;
             let mut rt_out = rt;
-            apply_trigger_output(
-                &profile.left_trigger.output,
-                lt_pressed,
-                &mut out_bits,
-                &mut desired_keys,
-                &mut lt_out,
-            );
-            apply_trigger_output(
-                &profile.right_trigger.output,
-                rt_pressed,
-                &mut out_bits,
-                &mut desired_keys,
-                &mut rt_out,
-            );
+            let mut tw = TriggerOut {
+                out_bits: &mut out_bits,
+                desired_keys: &mut desired_keys,
+                desired_mouse: &mut desired_mouse,
+                wheel_up: &mut wheel_up,
+                wheel_down: &mut wheel_down,
+            };
+            apply_trigger_output(&profile.left_trigger.output, lt_pressed, &mut tw, &mut lt_out);
+            apply_trigger_output(&profile.right_trigger.output, rt_pressed, &mut tw, &mut rt_out);
 
             // 6. Diff keyboard state and inject edges.
             for key in desired_keys.iter() {
@@ -301,6 +313,27 @@ impl Engine {
                 }
             }
             held_keys = desired_keys;
+
+            // 6b. Diff mouse buttons and inject edges; wheel ticks on rising edges.
+            for b in desired_mouse.iter() {
+                if !held_mouse.contains(b) {
+                    crate::mouse::send_mouse_button(b, true);
+                }
+            }
+            for b in held_mouse.iter() {
+                if !desired_mouse.contains(b) {
+                    crate::mouse::send_mouse_button(b, false);
+                }
+            }
+            held_mouse = desired_mouse;
+            if wheel_up && !wheel_up_held {
+                crate::mouse::mouse_wheel(1);
+            }
+            if wheel_down && !wheel_down_held {
+                crate::mouse::mouse_wheel(-1);
+            }
+            wheel_up_held = wheel_up;
+            wheel_down_held = wheel_down;
 
             // 7. Push the frame to the virtual pad.
             if let Err(e) = pad.update(
@@ -333,11 +366,14 @@ impl Engine {
             };
         }
 
-        // Release any keys still held when stopping.
+        // Release any keys / mouse buttons still held when stopping.
         for key in held_keys.iter() {
             if let Some((sc, ext)) = crate::keyboard::scancode(key) {
                 crate::keyboard::send_key(sc, ext, false);
             }
+        }
+        for b in held_mouse.iter() {
+            crate::mouse::send_mouse_button(b, false);
         }
 
         self.running.store(false, Ordering::SeqCst);
@@ -348,29 +384,45 @@ impl Engine {
     }
 }
 
-/// Apply a trigger's optional digital remap. When remapped to a gamepad button
-/// or key, the analog channel is muted so the game doesn't see both.
+/// Mutable sinks a trigger's digital remap can write to.
 #[cfg(windows)]
-fn apply_trigger_output(
-    target: &OutputTarget,
-    pressed: bool,
-    out_bits: &mut u16,
-    desired_keys: &mut HashSet<String>,
-    analog: &mut f32,
-) {
+struct TriggerOut<'a> {
+    out_bits: &'a mut u16,
+    desired_keys: &'a mut HashSet<String>,
+    desired_mouse: &'a mut HashSet<String>,
+    wheel_up: &'a mut bool,
+    wheel_down: &'a mut bool,
+}
+
+/// Apply a trigger's optional digital remap. When remapped to a gamepad button,
+/// key or mouse action, the analog channel is muted so the game doesn't see both.
+#[cfg(windows)]
+fn apply_trigger_output(target: &OutputTarget, pressed: bool, out: &mut TriggerOut, analog: &mut f32) {
     match target {
         OutputTarget::Passthrough => {}
         OutputTarget::None => *analog = 0.0,
         OutputTarget::Gamepad { button } => {
             *analog = 0.0;
             if pressed {
-                *out_bits |= output::bit_for(button);
+                *out.out_bits |= output::bit_for(button);
             }
         }
         OutputTarget::Key { code } => {
             *analog = 0.0;
             if pressed {
-                desired_keys.insert(code.clone());
+                out.desired_keys.insert(code.clone());
+            }
+        }
+        OutputTarget::Mouse { button } => {
+            *analog = 0.0;
+            if pressed {
+                match button.as_str() {
+                    "wheelup" => *out.wheel_up = true,
+                    "wheeldown" => *out.wheel_down = true,
+                    other => {
+                        out.desired_mouse.insert(other.to_string());
+                    }
+                }
             }
         }
     }
