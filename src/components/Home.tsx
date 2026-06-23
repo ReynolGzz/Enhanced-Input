@@ -1,4 +1,44 @@
+import { useState, type ReactNode } from "react";
 import type { ControllerInfo, ProfileSummary, EngineStatus } from "../lib/types";
+
+// Maps a backend controller `kind` (see src-tauri/src/input.rs) to the base
+// filename of its artwork under /public/controllers. Real product photos can be
+// dropped in as `<base>.png`; a generic SVG silhouette is used until then.
+function controllerArtBase(kind: string): string | null {
+  const k = kind.toLowerCase();
+  if (k.includes("dualshock") || k.includes("ds4")) return "dualshock4";
+  if (k.includes("dualsense")) return "dualsense";
+  if (k.includes("xbox") || k.includes("xinput") || k.includes("compatible"))
+    return "xbox";
+  return null;
+}
+
+// <img> that walks a list of candidate sources, advancing on load error, and
+// renders `fallback` once every source has failed. Lets a real PNG take
+// precedence over the bundled SVG placeholder with no code change.
+function FallbackImg({
+  sources,
+  alt,
+  className,
+  fallback = null,
+}: {
+  sources: string[];
+  alt: string;
+  className?: string;
+  fallback?: ReactNode;
+}) {
+  const [idx, setIdx] = useState(0);
+  if (idx >= sources.length) return <>{fallback}</>;
+  return (
+    <img
+      className={className}
+      src={sources[idx]}
+      alt={alt}
+      draggable={false}
+      onError={() => setIdx((i) => i + 1)}
+    />
+  );
+}
 
 export function Home({
   controllers,
@@ -25,12 +65,18 @@ export function Home({
   const activeProfile =
     profiles.find((p) => p.id === activeProfileId) ?? profiles[0] ?? null;
   const connLabel = controller?.path.startsWith("xinput:") ? "XInput" : "USB";
+  const artBase = controller ? controllerArtBase(controller.kind) : null;
 
   return (
     <div className="home">
       <div className="home-top">
         <div className="home-title">
-          <span className="logo">EI</span>
+          <img
+            className="logo-mark"
+            src="/logo.svg"
+            alt="Enhanced Input"
+            draggable={false}
+          />
           <h1>Enhanced Input</h1>
         </div>
 
@@ -42,14 +88,35 @@ export function Home({
         {controller ? (
           <div className="controller-row">
             <div className="controller-id">
-              <span className="controller-glyph">🎮</span>
+              <FallbackImg
+                key={controller.kind}
+                className="controller-art"
+                sources={
+                  artBase
+                    ? [`/controllers/${artBase}.png`, "/controllers/gamepad.svg"]
+                    : ["/controllers/gamepad.svg"]
+                }
+                alt={controller.kind}
+                fallback={<span className="controller-glyph">🎮</span>}
+              />
               <div>
                 <div className="controller-name">{controller.name}</div>
                 <div className="controller-sub">
                   <span
                     className={`dot ${status.connected ? "ok" : "off"}`}
                   />
-                  {controller.kind} · {connLabel}
+                  {controller.kind} ·{" "}
+                  {connLabel === "USB" && (
+                    <FallbackImg
+                      className="conn-icon"
+                      sources={[
+                        "/controllers/usb-c.png",
+                        "/controllers/usb-c.svg",
+                      ]}
+                      alt="USB-C"
+                    />
+                  )}
+                  {connLabel}
                 </div>
               </div>
             </div>

@@ -76,15 +76,10 @@ button {
   margin-bottom: 26px;
 }
 
-.home-title .logo {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--accent), #6a5cff);
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-  color: white;
+.home-title .logo-mark {
+  width: 32px;
+  height: 32px;
+  display: block;
 }
 
 .home-title h1 {
@@ -134,6 +129,25 @@ button {
   place-items: center;
   font-size: 22px;
   border: 1px solid var(--border);
+}
+
+.controller-art {
+  width: 64px;
+  height: 48px;
+  object-fit: contain;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+  flex: none;
+}
+
+.conn-icon {
+  height: 13px;
+  width: auto;
+  vertical-align: -2px;
+  margin: 0 5px 0 3px;
+  opacity: 0.9;
 }
 
 .controller-name {

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" role="img" aria-label="Enhanced Input">
+  <defs>
+    <pattern id="ei-grid" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="4" fill="#e9f1fe" />
+      <path d="M4 0H0V4" stroke="#b8d0f7" stroke-width="0.5" />
+    </pattern>
+  </defs>
+  <!-- blueprint construction guides -->
+  <rect x="12" y="12" width="96" height="96" rx="30" stroke="#cfe0fb" stroke-width="1" />
+  <rect x="7" y="7" width="106" height="106" rx="42" stroke="#e0eafd" stroke-width="1" />
+  <!-- gridded quadrants (top-left + bottom-right) -->
+  <path d="M60 60 L14 60 A46 46 0 0 1 60 14 Z" fill="url(#ei-grid)" />
+  <path d="M60 60 L106 60 A46 46 0 0 1 60 106 Z" fill="url(#ei-grid)" />
+  <!-- solid quadrants (top-right + bottom-left) -->
+  <path d="M60 60 L60 14 A46 46 0 0 1 106 60 Z" fill="#a8c7fa" />
+  <path d="M60 60 L60 106 A46 46 0 0 1 14 60 Z" fill="#a8c7fa" />
+</svg>
