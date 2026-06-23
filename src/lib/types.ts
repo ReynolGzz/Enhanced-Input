@@ -15,13 +15,27 @@ export type ResponseCurve =
   | "precision"
   | "custom";
 
+export type MacroAction =
+  | { kind: "gamepad"; button: string }
+  | { kind: "key"; code: string }
+  | { kind: "mouse"; button: string };
+
+export interface MacroStep {
+  action: MacroAction;
+  holdMs: number;
+  gapMs: number;
+}
+
+export type MacroTrigger = "once" | "whileHeld" | "toggle";
+
 export type OutputTarget =
   | { kind: "passthrough" }
   | { kind: "none" }
   | { kind: "gamepad"; button: string }
   | { kind: "key"; code: string }
   // button ∈ left|right|middle|x1|x2|wheelup|wheeldown
-  | { kind: "mouse"; button: string };
+  | { kind: "mouse"; button: string }
+  | { kind: "macro"; steps: MacroStep[]; trigger: MacroTrigger };
 
 export interface StickConfig {
   innerType: InnerDeadzone;

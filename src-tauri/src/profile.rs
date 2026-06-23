@@ -188,10 +188,48 @@ impl Default for TriggerConfig {
     }
 }
 
+/// One action a macro performs during a step.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum MacroAction {
+    Gamepad { button: String },
+    Key { code: String },
+    Mouse { button: String },
+}
+
+/// A macro step: hold `action` for `hold_ms`, then wait `gap_ms` before the next.
+/// Times are in milliseconds and may be fractional (minimum 0).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MacroStep {
+    pub action: MacroAction,
+    pub hold_ms: f32,
+    pub gap_ms: f32,
+}
+
+/// How a macro is triggered by its button.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum MacroTrigger {
+    /// Play the whole sequence once per press.
+    Once,
+    /// Loop the sequence while the button is held.
+    WhileHeld,
+    /// Press to start looping, press again to stop.
+    Toggle,
+}
+
+impl Default for MacroTrigger {
+    fn default() -> Self {
+        MacroTrigger::Once
+    }
+}
+
 /// What an input control emits. `Passthrough` keeps the original signal,
 /// `None` disables it, `Gamepad` remaps to another virtual-pad button,
-/// `Key` injects a keyboard key, `Mouse` a mouse button or wheel tick.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+/// `Key` injects a keyboard key, `Mouse` a mouse button or wheel tick,
+/// `Macro` plays a timed sequence of actions.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum OutputTarget {
     Passthrough,
@@ -200,6 +238,11 @@ pub enum OutputTarget {
     Key { code: String },
     /// `button` ∈ left|right|middle|x1|x2|wheelup|wheeldown.
     Mouse { button: String },
+    Macro {
+        steps: Vec<MacroStep>,
+        #[serde(default)]
+        trigger: MacroTrigger,
+    },
 }
 
 impl Default for OutputTarget {

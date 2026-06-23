@@ -3,7 +3,7 @@
 //! and exposes a live snapshot for the UI preview.
 
 use crate::input::GamepadState;
-use crate::profile::{OutputTarget, Profile};
+use crate::profile::{MacroAction, MacroStep, MacroTrigger, OutputTarget, Profile};
 use crate::{output, transform};
 use parking_lot::{Mutex, RwLock};
 use serde::Serialize;
@@ -106,6 +106,104 @@ fn next_rand(state: &mut u32) -> f32 {
     (x as f32 / u32::MAX as f32) * 2.0 - 1.0
 }
 
+/// Per-button macro playback state, kept across frames.
+struct MacroPlayback {
+    step: usize,
+    phase_start: Instant,
+    in_hold: bool,
+    playing: bool,
+    prev_pressed: bool,
+}
+
+impl MacroPlayback {
+    fn new(now: Instant) -> Self {
+        MacroPlayback {
+            step: 0,
+            phase_start: now,
+            in_hold: false,
+            playing: false,
+            prev_pressed: false,
+        }
+    }
+}
+
+/// Advance a macro and return the action to emit this frame (None during a gap
+/// or when the macro isn't playing). Handles the three trigger modes.
+fn macro_action<'a>(
+    pb: &mut MacroPlayback,
+    steps: &'a [MacroStep],
+    trigger: MacroTrigger,
+    pressed: bool,
+    now: Instant,
+) -> Option<&'a MacroAction> {
+    if steps.is_empty() {
+        return None;
+    }
+    let rising = pressed && !pb.prev_pressed;
+    pb.prev_pressed = pressed;
+
+    let start = |pb: &mut MacroPlayback| {
+        pb.step = 0;
+        pb.phase_start = now;
+        pb.in_hold = true;
+    };
+    match trigger {
+        MacroTrigger::Once => {
+            if rising {
+                pb.playing = true;
+                start(pb);
+            }
+        }
+        MacroTrigger::WhileHeld => {
+            if rising {
+                pb.playing = true;
+                start(pb);
+            }
+            if !pressed {
+                pb.playing = false;
+            }
+        }
+        MacroTrigger::Toggle => {
+            if rising {
+                pb.playing = !pb.playing;
+                if pb.playing {
+                    start(pb);
+                }
+            }
+        }
+    }
+    if !pb.playing {
+        return None;
+    }
+
+    let elapsed_ms = pb.phase_start.elapsed().as_secs_f32() * 1000.0;
+    if pb.in_hold {
+        if elapsed_ms >= steps[pb.step].hold_ms.max(0.0) {
+            pb.in_hold = false; // enter the gap
+            pb.phase_start = now;
+            return None;
+        }
+        Some(&steps[pb.step].action)
+    } else {
+        if elapsed_ms < steps[pb.step].gap_ms.max(0.0) {
+            return None; // still in the gap
+        }
+        pb.step += 1;
+        if pb.step >= steps.len() {
+            match trigger {
+                MacroTrigger::Once => {
+                    pb.playing = false;
+                    return None;
+                }
+                _ => pb.step = 0, // loop
+            }
+        }
+        pb.in_hold = true;
+        pb.phase_start = now;
+        Some(&steps[pb.step].action)
+    }
+}
+
 /// Stateful smoothing filter for a stick axis pair. `level` -10..10:
 /// 0 = off, positive = exponential smoothing (cleaner but slower), negative =
 /// artificial jitter. `prev` holds the previous output for the EMA.
@@ -187,6 +285,7 @@ impl Engine {
         let mut wheel_up_held = false;
         let mut wheel_down_held = false;
         let mut turbo_start: HashMap<String, Instant> = HashMap::new();
+        let mut macro_state: HashMap<String, MacroPlayback> = HashMap::new();
         // Smoothing filter state (per stick) + jitter RNG.
         let mut smooth_l = (0.0f32, 0.0f32);
         let mut smooth_r = (0.0f32, 0.0f32);
@@ -276,6 +375,30 @@ impl Engine {
                                 other => {
                                     desired_mouse.insert(other.to_string());
                                 }
+                            }
+                        }
+                    }
+                    OutputTarget::Macro { steps, trigger } => {
+                        // Macros use the raw press (their own trigger semantics),
+                        // not the turbo-gated `active`.
+                        let pb = macro_state
+                            .entry(id.to_string())
+                            .or_insert_with(|| MacroPlayback::new(now));
+                        if let Some(act) = macro_action(pb, steps, *trigger, pressed, now) {
+                            match act {
+                                MacroAction::Gamepad { button } => {
+                                    out_bits |= output::bit_for(button)
+                                }
+                                MacroAction::Key { code } => {
+                                    desired_keys.insert(code.clone());
+                                }
+                                MacroAction::Mouse { button } => match button.as_str() {
+                                    "wheelup" => wheel_up = true,
+                                    "wheeldown" => wheel_down = true,
+                                    other => {
+                                        desired_mouse.insert(other.to_string());
+                                    }
+                                },
                             }
                         }
                     }
@@ -425,6 +548,8 @@ fn apply_trigger_output(target: &OutputTarget, pressed: bool, out: &mut TriggerO
                 }
             }
         }
+        // Macros on triggers are not wired yet; leave the analog channel intact.
+        OutputTarget::Macro { .. } => {}
     }
 }
 
