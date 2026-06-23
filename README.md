@@ -1,9 +1,11 @@
 # Enhanced Input
 
 Remapeador de mando para **Windows**, con interfaz estilo Steam Input.
-Lee la señal de tu mando físico, la **transforma** (zonas muertas, sensibilidad,
-curvas, reasignación de botones, turbo…) y la entrega a un **mando virtual Xbox
-360** que el juego lee como si fuera un mando normal.
+Lee la señal de tu mando físico (**DualShock 4**, **DualSense**, y mandos
+**Xbox / compatibles** como GameSir en modo X), la **transforma** (zonas muertas,
+sensibilidad, curvas, reasignación a botón/tecla/ratón, macros, turbo…) y la
+entrega a un **mando virtual Xbox 360** que el juego lee como si fuera un mando
+normal.
 
 > Stack: **Tauri 2 + Rust** (backend de entrada/salida) y **React + TypeScript**
 > (interfaz).
@@ -50,25 +52,30 @@ Windows (ViGEm/HID) **necesitan que las compiles y pruebes tú en Windows**.
 
 **Implementado y cableado:**
 
-- ✅ Lectura de **DualShock 4 por USB** (HID).
+- ✅ Lectura de **DualShock 4 y DualSense por USB** (HID) y **Xbox / compatibles**
+  (XInput; incluye GameSir en modo X).
 - ✅ Salida a **mando virtual Xbox 360** (ViGEmBus).
-- ✅ **Zonas muertas**: tipo (círculo, círculo reescalado, cuadrado, cruz),
-  interior y exterior.
-- ✅ **Sensibilidad** y **curvas de respuesta**.
-- ✅ **Anti zona muerta** (anillo exterior).
-- ✅ **Reasignar botones** a otro botón del mando **o a una tecla** del teclado.
-- ✅ **Turbo** (mantener para repetir) con velocidad configurable.
+- ✅ **Zonas muertas** desacopladas: **tipo interior** (raw / cruz / radial) +
+  **forma exterior** (default / cuadrado / círculo perfecto), interior hasta 100%
+  y **rango exterior convencional**.
+- ✅ **Sensibilidad**, **curvas** (incluida **custom**), **anti zona muerta**,
+  **edge binding radius** (0–32767) y **smoothing** (−10…10).
+- ✅ **Reasignar** a otro botón, **tecla**, **ratón** (botones + rueda) o **macro**,
+  con un selector por pestañas (control / teclado / numpad / ratón / macro).
+- ✅ **Turbo** hasta 100 v/s + opción **"Disable regular pressing"**.
 - ✅ **Gatillos**: umbral, recorrido analógico, curva y reasignación digital.
-- ✅ **Perfiles** guardados en disco + selección de perfil activo.
-- ✅ **Preview en vivo** del stick (entrada vs salida).
+- ✅ **Perfiles**: crear / borrar / duplicar / renombrar + **import/export por
+  código determinista** (la misma config genera el mismo código).
+- ✅ **Inputs numéricos** junto a los sliders (decimales) y **preview en vivo**.
+- ✅ **Auto-actualización** in-app (releases firmadas de GitHub).
 
 **Roadmap (siguiente):**
 
-- ⏳ Soporte de **DualSense** y mandos Xbox (XInput) como fuentes.
 - ⏳ **Ocultar el mando físico** automáticamente (HidHide) para evitar doble input.
-- ⏳ Capturar teclas "al vuelo" en la UI (en vez de elegir de una lista).
-- ⏳ Action sets / capas, macros, salida de ratón.
-- ⏳ Curvas personalizadas con editor visual.
+- ⏳ Settings estilo Discord: **themes**, Windows Settings, **selector de idioma**
+  (i18n) y **Game Overlay** (link para OBS).
+- ⏳ Branding nuevo (logo, fotos reales de los mandos).
+- ⏳ Capturar teclas "al vuelo" y editor visual de curvas.
 
 ---
 
@@ -135,6 +142,32 @@ El ejecutable y el instalador quedan en
    el mando virtual.
 
 ---
+
+## 🔄 Actualizaciones
+
+**No hace falta borrar nada ni rehacer el proceso de instalación** para
+actualizar. Rust, Node y **ViGEmBus** se instalan una sola vez, y tus perfiles
+viven aparte (`%APPDATA%/EnhancedInput/`).
+
+- **Como usuario:** instala una versión desde **Releases** (el instalador NSIS
+  actualiza sobre la anterior). A partir de ahí, la app **busca actualizaciones
+  al arrancar** y te ofrece *"Instalar y reiniciar"* — sin PowerShell ni
+  recompilar.
+- **Compilando desde el código:** `git pull` → `npm install` (si cambian deps) →
+  `npm run app:build`. La 2.ª compilación es mucho más rápida por el caché.
+
+**Publicar una release (mantenedor):**
+
+1. Sube la versión en `src-tauri/tauri.conf.json` y `package.json`.
+2. Crea y empuja un tag: `git tag v1.2.3 && git push origin v1.2.3`.
+3. El workflow `release.yml` compila en Windows, **firma** y publica el
+   instalador + `latest.json` (que lee el updater).
+
+Requiere el *secret* del repo **`TAURI_SIGNING_PRIVATE_KEY`** (y
+`TAURI_SIGNING_PRIVATE_KEY_PASSWORD` si tu clave tiene contraseña). La **clave
+pública** ya está en `tauri.conf.json` (`plugins.updater.pubkey`). Para generar
+un par nuevo: `npx tauri signer generate -w ei.key` y pega la pública en la
+config.
 
 ## 📁 Estructura
 

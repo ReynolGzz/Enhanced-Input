@@ -35,7 +35,16 @@ pub fn run() {
 
     let engine = engine::Engine::new(profile);
 
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+    // Desktop-only plugins: in-app updater + relaunch after install.
+    #[cfg(desktop)]
+    {
+        builder = builder
+            .plugin(tauri_plugin_updater::Builder::new().build())
+            .plugin(tauri_plugin_process::init());
+    }
+
+    builder
         .manage(AppState { engine })
         .invoke_handler(tauri::generate_handler![
             commands::list_controllers,

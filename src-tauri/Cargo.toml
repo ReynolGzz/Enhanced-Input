@@ -26,6 +26,9 @@ log = "0.4"
 # Deterministic, shareable profile codes (deflate + base58).
 flate2 = "1"
 bs58 = "0.5"
+# In-app auto-update (checks signed GitHub releases) + relaunch.
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"
 
 # Windows-only: physical controller (HID), virtual pad (ViGEm), key injection.
 [target.'cfg(windows)'.dependencies]

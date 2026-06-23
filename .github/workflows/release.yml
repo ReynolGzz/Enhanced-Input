@@ -1,0 +1,52 @@
+# Publishes a signed Windows release (installer + updater artifacts) whenever a
+# version tag like `v1.2.3` is pushed. The in-app updater reads the `latest.json`
+# this uploads. Requires the repo secret TAURI_SIGNING_PRIVATE_KEY (and, if your
+# key has one, TAURI_SIGNING_PRIVATE_KEY_PASSWORD).
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install frontend deps
+        run: npm ci
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-release-${{ hashFiles('src-tauri/Cargo.lock') }}
+
+      - name: Build & publish release (signed updater artifacts)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "Enhanced Input ${{ github.ref_name }}"
+          releaseBody: "Descarga el instalador. Una vez instalado, la app se actualizará sola."
+          releaseDraft: false
+          prerelease: false
+          args: --config src-tauri/tauri.release.conf.json

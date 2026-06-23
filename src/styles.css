@@ -884,3 +884,15 @@ input[type="range"]::-webkit-slider-thumb {
   font-size: 13px;
   margin-top: 10px;
 }
+
+/* Update banner */
+.update-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13.5px;
+}

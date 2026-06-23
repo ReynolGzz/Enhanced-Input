@@ -9,6 +9,7 @@ import type {
 import { Home } from "./components/Home";
 import { ProfilesModal } from "./components/ProfilesModal";
 import { ProfileEditor } from "./components/editor/ProfileEditor";
+import { checkForUpdate, type UpdateInfo } from "./lib/updater";
 
 type Screen = "home" | "editor";
 
@@ -31,6 +32,8 @@ export default function App() {
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
   const [showProfiles, setShowProfiles] = useState(false);
+  const [update, setUpdate] = useState<UpdateInfo | null>(null);
+  const [updating, setUpdating] = useState(false);
 
   const refreshProfiles = useCallback(async () => {
     try {
@@ -81,6 +84,21 @@ export default function App() {
     }, 1200);
     return () => clearInterval(handle);
   }, []);
+
+  // Check for an update once on launch (no-op outside a configured Tauri build).
+  useEffect(() => {
+    checkForUpdate().then(setUpdate);
+  }, []);
+
+  const handleInstallUpdate = useCallback(async () => {
+    if (!update) return;
+    setUpdating(true);
+    try {
+      await update.install();
+    } catch {
+      setUpdating(false);
+    }
+  }, [update]);
 
   const handleSelectProfile = useCallback(async (id: string) => {
     setActiveProfileId(id);
@@ -165,9 +183,24 @@ export default function App() {
     }
   }, [status.running, controllers]);
 
+  const updateBanner = update && (
+    <div className="update-banner">
+      <span>✨ Actualización disponible (v{update.version}).</span>
+      <div style={{ display: "flex", gap: 8 }}>
+        <button className="btn ghost sm" onClick={() => setUpdate(null)} disabled={updating}>
+          Después
+        </button>
+        <button className="btn primary sm" onClick={handleInstallUpdate} disabled={updating}>
+          {updating ? "Instalando…" : "Instalar y reiniciar"}
+        </button>
+      </div>
+    </div>
+  );
+
   if (screen === "editor" && editing) {
     return (
       <div className="app">
+        {updateBanner}
         <ProfileEditor
           profile={editing}
           dirty={dirty}
@@ -184,6 +217,7 @@ export default function App() {
 
   return (
     <div className="app">
+      {updateBanner}
       <Home
         controllers={controllers}
         profiles={profiles}
