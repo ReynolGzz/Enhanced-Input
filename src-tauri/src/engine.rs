@@ -120,7 +120,7 @@ impl Engine {
     }
 
     fn run(self: Arc<Self>, controller_path: Option<String>) {
-        use crate::input::Ds4Reader;
+        use crate::input::{open_reader, InputReader};
         use crate::output::VirtualPad;
 
         let mut pad = match VirtualPad::new() {
@@ -132,7 +132,7 @@ impl Engine {
             }
         };
 
-        let mut reader = match Ds4Reader::open(controller_path.as_deref()) {
+        let mut reader: Box<dyn InputReader> = match open_reader(controller_path.as_deref()) {
             Ok(r) => r,
             Err(e) => {
                 self.running.store(false, Ordering::SeqCst);

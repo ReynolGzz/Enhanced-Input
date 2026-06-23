@@ -22,6 +22,7 @@ export function Home({
   const controller = controllers[0] ?? null;
   const activeProfile =
     profiles.find((p) => p.id === activeProfileId) ?? profiles[0] ?? null;
+  const connLabel = controller?.path.startsWith("xinput:") ? "XInput" : "USB";
 
   return (
     <div className="home">
@@ -46,7 +47,7 @@ export function Home({
                   <span
                     className={`dot ${status.connected ? "ok" : "off"}`}
                   />
-                  {controller.kind} · USB
+                  {controller.kind} · {connLabel}
                 </div>
               </div>
             </div>
@@ -86,7 +87,8 @@ export function Home({
             <div className="big">🔌</div>
             <div>No se detecta ningún mando.</div>
             <div style={{ marginTop: 6, fontSize: 13 }}>
-              Conecta tu DualShock 4 por cable USB y vuelve a intentarlo.
+              Conecta tu control y vuelve a intentarlo. Compatible con DualShock 4,
+              DualSense y mandos Xbox / compatibles (GameSir en modo X).
             </div>
           </div>
         )}
