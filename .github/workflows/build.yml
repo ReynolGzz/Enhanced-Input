@@ -1,0 +1,44 @@
+# Builds Enhanced Input on Windows. This file lives inside the project folder,
+# so it only runs once `enhanced-input/` is the root of its own repository
+# (GitHub only reads workflows from `.github/workflows` at the repo root).
+name: build
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install frontend deps
+        run: npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/Cargo.toml') }}
+
+      - name: Compile Rust backend
+        run: cargo build --release --manifest-path src-tauri/Cargo.toml
+
+      - name: Run logic tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml
