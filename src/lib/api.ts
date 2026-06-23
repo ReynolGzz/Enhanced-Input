@@ -14,7 +14,13 @@ export const api = {
   loadProfile: (id: string) => invoke<Profile>("load_profile", { id }),
   saveProfile: (profile: Profile) => invoke<void>("save_profile", { profile }),
   createProfile: (name: string) => invoke<Profile>("create_profile", { name }),
+  duplicateProfile: (id: string) => invoke<Profile>("duplicate_profile", { id }),
+  renameProfile: (id: string, name: string) =>
+    invoke<void>("rename_profile", { id, name }),
   deleteProfile: (id: string) => invoke<void>("delete_profile", { id }),
+  exportProfileCode: (id: string) => invoke<string>("export_profile_code", { id }),
+  importProfileCode: (code: string, name: string) =>
+    invoke<Profile>("import_profile_code", { code, name }),
   getSettings: () => invoke<{ activeProfileId: string | null }>("get_settings"),
   setActiveProfile: (id: string) =>
     invoke<void>("set_active_profile", { id }),

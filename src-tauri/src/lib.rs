@@ -7,6 +7,7 @@ mod keyboard;
 mod mouse;
 mod output;
 mod profile;
+mod share;
 mod storage;
 mod transform;
 
@@ -42,7 +43,11 @@ pub fn run() {
             commands::load_profile,
             commands::save_profile,
             commands::create_profile,
+            commands::duplicate_profile,
+            commands::rename_profile,
             commands::delete_profile,
+            commands::export_profile_code,
+            commands::import_profile_code,
             commands::get_settings,
             commands::set_active_profile,
             commands::start_engine,

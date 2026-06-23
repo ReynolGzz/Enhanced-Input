@@ -41,26 +41,70 @@ pub fn save_profile(profile: Profile, state: State<'_, AppState>) -> Result<(), 
     Ok(())
 }
 
-#[tauri::command]
-pub fn create_profile(name: String) -> Result<Profile, String> {
+/// A unique-enough profile id derived from the current time.
+fn new_id() -> String {
     let nanos = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .map(|d| d.as_nanos())
         .unwrap_or(0);
-    let id = format!("p{nanos}");
+    format!("p{nanos}")
+}
+
+#[tauri::command]
+pub fn create_profile(name: String) -> Result<Profile, String> {
     let display = if name.trim().is_empty() {
         "New Profile".to_string()
     } else {
         name.trim().to_string()
     };
-    let profile = Profile::new(id, display);
+    let profile = Profile::new(new_id(), display);
     storage::save_profile(&profile).map_err(|e| e.to_string())?;
     Ok(profile)
 }
 
 #[tauri::command]
+pub fn duplicate_profile(id: String) -> Result<Profile, String> {
+    let mut profile = storage::load_profile(&id).map_err(|e| e.to_string())?;
+    profile.id = new_id();
+    profile.name = format!("{} (copia)", profile.name);
+    storage::save_profile(&profile).map_err(|e| e.to_string())?;
+    Ok(profile)
+}
+
+#[tauri::command]
+pub fn rename_profile(id: String, name: String) -> Result<(), String> {
+    let mut profile = storage::load_profile(&id).map_err(|e| e.to_string())?;
+    let trimmed = name.trim();
+    if trimmed.is_empty() {
+        return Err("El nombre no puede estar vacío".into());
+    }
+    profile.name = trimmed.to_string();
+    storage::save_profile(&profile).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub fn delete_profile(id: String) -> Result<(), String> {
     storage::delete_profile(&id).map_err(|e| e.to_string())
+}
+
+/// Export a profile's configuration as a shareable, deterministic code.
+#[tauri::command]
+pub fn export_profile_code(id: String) -> Result<String, String> {
+    let profile = storage::load_profile(&id).map_err(|e| e.to_string())?;
+    crate::share::export_code(&profile).map_err(|e| e.to_string())
+}
+
+/// Import a profile from a shareable code, saving it under a fresh id.
+#[tauri::command]
+pub fn import_profile_code(code: String, name: String) -> Result<Profile, String> {
+    let display = if name.trim().is_empty() {
+        "Perfil importado".to_string()
+    } else {
+        name.trim().to_string()
+    };
+    let profile = crate::share::import_code(&code, new_id(), display).map_err(|e| e.to_string())?;
+    storage::save_profile(&profile).map_err(|e| e.to_string())?;
+    Ok(profile)
 }
 
 #[tauri::command]

@@ -7,6 +7,7 @@ export function Home({
   status,
   onSelectProfile,
   onNewProfile,
+  onManageProfiles,
   onEditProfile,
   onToggleEngine,
 }: {
@@ -16,6 +17,7 @@ export function Home({
   status: EngineStatus;
   onSelectProfile: (id: string) => void;
   onNewProfile: () => void;
+  onManageProfiles: () => void;
   onEditProfile: () => void;
   onToggleEngine: () => void;
 }) {
@@ -70,6 +72,9 @@ export function Home({
                   </option>
                 ))}
               </select>
+              <button className="btn ghost" onClick={onManageProfiles}>
+                Perfiles
+              </button>
               <button className="btn" onClick={onNewProfile}>
                 Nuevo
               </button>

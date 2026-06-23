@@ -7,6 +7,7 @@ import type {
   ProfileSummary,
 } from "./lib/types";
 import { Home } from "./components/Home";
+import { ProfilesModal } from "./components/ProfilesModal";
 import { ProfileEditor } from "./components/editor/ProfileEditor";
 
 type Screen = "home" | "editor";
@@ -29,6 +30,7 @@ export default function App() {
 
   const [showNew, setShowNew] = useState(false);
   const [newName, setNewName] = useState("");
+  const [showProfiles, setShowProfiles] = useState(false);
 
   const refreshProfiles = useCallback(async () => {
     try {
@@ -88,6 +90,27 @@ export default function App() {
       /* ignore */
     }
   }, []);
+
+  const handleProfilesChanged = useCallback(
+    async (selectId?: string) => {
+      let list: ProfileSummary[] = [];
+      try {
+        list = await api.listProfiles();
+      } catch {
+        return;
+      }
+      setProfiles(list);
+      if (selectId) {
+        setActiveProfileId(selectId);
+        await api.setActiveProfile(selectId);
+      } else if (!list.find((p) => p.id === activeProfileId) && list[0]) {
+        // The active profile was deleted; fall back to the first one.
+        setActiveProfileId(list[0].id);
+        await api.setActiveProfile(list[0].id);
+      }
+    },
+    [activeProfileId]
+  );
 
   const handleEdit = useCallback(async () => {
     if (!activeProfileId) return;
@@ -168,9 +191,19 @@ export default function App() {
         status={status}
         onSelectProfile={handleSelectProfile}
         onNewProfile={() => setShowNew(true)}
+        onManageProfiles={() => setShowProfiles(true)}
         onEditProfile={handleEdit}
         onToggleEngine={handleToggleEngine}
       />
+
+      {showProfiles && (
+        <ProfilesModal
+          profiles={profiles}
+          activeId={activeProfileId}
+          onClose={() => setShowProfiles(false)}
+          onChanged={handleProfilesChanged}
+        />
+      )}
 
       {showNew && (
         <div className="modal-backdrop" onClick={() => setShowNew(false)}>

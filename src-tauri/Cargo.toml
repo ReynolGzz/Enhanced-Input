@@ -23,6 +23,9 @@ parking_lot = "0.12"
 once_cell = "1"
 dirs = "5"
 log = "0.4"
+# Deterministic, shareable profile codes (deflate + base58).
+flate2 = "1"
+bs58 = "0.5"
 
 # Windows-only: physical controller (HID), virtual pad (ViGEm), key injection.
 [target.'cfg(windows)'.dependencies]

@@ -727,7 +727,9 @@ name = "enhanced-input"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bs58",
  "dirs 5.0.1",
+ "flate2",
  "hidapi",
  "log",
  "once_cell",
