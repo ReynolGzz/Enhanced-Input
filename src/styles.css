@@ -79,6 +79,9 @@ button {
 .home-title .logo-mark {
   width: 32px;
   height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #fff;
   display: block;
 }
 
@@ -143,11 +146,14 @@ button {
 }
 
 .conn-icon {
-  height: 13px;
+  height: 14px;
   width: auto;
-  vertical-align: -2px;
-  margin: 0 5px 0 3px;
-  opacity: 0.9;
+  vertical-align: -4px;
+  margin-right: 6px;
+  padding: 2px 5px;
+  background: #eef2f7;
+  border-radius: 6px;
+  box-sizing: content-box;
 }
 
 .controller-name {

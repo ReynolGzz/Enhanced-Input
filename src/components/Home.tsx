@@ -73,7 +73,7 @@ export function Home({
         <div className="home-title">
           <img
             className="logo-mark"
-            src="/logo.svg"
+            src="/logo.jpg"
             alt="Enhanced Input"
             draggable={false}
           />
