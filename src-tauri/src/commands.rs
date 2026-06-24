@@ -147,3 +147,13 @@ pub fn engine_status(state: State<'_, AppState>) -> EngineStatus {
 pub fn live_preview(state: State<'_, AppState>) -> LivePreview {
     state.engine.live()
 }
+
+/// URL for the OBS streamer overlay (served by the local overlay server).
+#[tauri::command]
+pub fn overlay_url(style: String, state: State<'_, AppState>) -> String {
+    let style = if style == "black" { "black" } else { "white" };
+    format!(
+        "http://127.0.0.1:{}/overlay?style={}",
+        state.overlay_port, style
+    )
+}

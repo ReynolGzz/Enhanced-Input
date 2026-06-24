@@ -13,6 +13,7 @@ import {
   type Lang,
 } from "../lib/settings";
 import { checkForUpdate, currentVersion, type UpdateInfo } from "../lib/updater";
+import { api } from "../lib/api";
 import { Select, Toggle, AdvField } from "./ui";
 
 type Section = "appearance" | "language" | "overlay" | "windows" | "updates";
@@ -242,11 +243,26 @@ function UpdatesPane() {
 
 function OverlayPane() {
   const [style, setStyle] = useState(getStr(OVERLAY_STYLE, "white"));
+  const [url, setUrl] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const copy = async () => {
+    try {
+      const u = await api.overlayUrl(style);
+      setUrl(u);
+      await navigator.clipboard.writeText(u);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* not under Tauri / clipboard blocked */
+    }
+  };
+
   return (
     <>
       <p className="sub">
         Muestra tu control en vivo en OBS (Browser Source). Modelos sin marcas
-        (shell con logo y botones en negro).
+        (blanco o negro); fondo transparente.
       </p>
       <AdvField label="Estilo del control">
         <Select
@@ -261,13 +277,30 @@ function OverlayPane() {
           }}
         />
       </AdvField>
-      <div className="wip-box" style={{ height: "auto", marginTop: 22 }}>
-        <div className="big">🎥</div>
-        <div>
-          El enlace para OBS (Copy Link) se está implementando — quedará
-          funcional muy pronto.
-        </div>
+
+      <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 18 }}>
+        <button className="btn primary" onClick={copy}>
+          Copy Link (OBS)
+        </button>
+        {copied && (
+          <span style={{ color: "var(--accent)", fontSize: 13 }}>¡Copiado!</span>
+        )}
       </div>
+
+      {url && (
+        <input
+          className="input"
+          readOnly
+          value={url}
+          onFocus={(e) => e.currentTarget.select()}
+          style={{ marginTop: 12, width: "100%" }}
+        />
+      )}
+
+      <p className="sub" style={{ marginTop: 14 }}>
+        En OBS: <b>Fuentes → + → Navegador</b> y pega el enlace. Los botones se
+        iluminan en vivo mientras el motor (Iniciar) está activo.
+      </p>
     </>
   );
 }

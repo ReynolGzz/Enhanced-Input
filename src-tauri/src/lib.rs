@@ -6,6 +6,7 @@ mod input;
 mod keyboard;
 mod mouse;
 mod output;
+mod overlay;
 mod profile;
 mod share;
 mod storage;
@@ -16,6 +17,8 @@ use std::sync::Arc;
 /// Shared application state managed by Tauri.
 pub struct AppState {
     pub engine: Arc<engine::Engine>,
+    /// Port of the local OBS overlay server (0 if it failed to bind).
+    pub overlay_port: u16,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -35,6 +38,9 @@ pub fn run() {
 
     let engine = engine::Engine::new(profile);
 
+    // Start the local OBS overlay server (best-effort; 0 = could not bind).
+    let overlay_port = overlay::start(Arc::clone(&engine));
+
     let mut builder = tauri::Builder::default();
     // Desktop-only plugins: in-app updater + relaunch after install.
     #[cfg(desktop)]
@@ -45,7 +51,7 @@ pub fn run() {
     }
 
     builder
-        .manage(AppState { engine })
+        .manage(AppState { engine, overlay_port })
         .invoke_handler(tauri::generate_handler![
             commands::list_controllers,
             commands::list_profiles,
@@ -63,6 +69,7 @@ pub fn run() {
             commands::stop_engine,
             commands::engine_status,
             commands::live_preview,
+            commands::overlay_url,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Enhanced Input");

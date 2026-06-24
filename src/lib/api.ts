@@ -29,4 +29,5 @@ export const api = {
   stopEngine: () => invoke<EngineStatus>("stop_engine"),
   engineStatus: () => invoke<EngineStatus>("engine_status"),
   livePreview: () => invoke<LivePreview>("live_preview"),
+  overlayUrl: (style: string) => invoke<string>("overlay_url", { style }),
 };
