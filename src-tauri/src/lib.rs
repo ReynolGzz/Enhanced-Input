@@ -21,6 +21,17 @@ pub struct AppState {
     pub overlay_port: u16,
 }
 
+/// Bring the main window back from the tray (used by the tray icon + menu).
+#[cfg(desktop)]
+fn restore_main(app: &tauri::AppHandle) {
+    use tauri::Manager;
+    if let Some(w) = app.get_webview_window("main") {
+        let _ = w.show();
+        let _ = w.unminimize();
+        let _ = w.set_focus();
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     // Make sure a default profile exists on first launch.
@@ -55,6 +66,47 @@ pub fn run() {
     }
 
     builder
+        .setup(|app| {
+            // System-tray icon so the window can come back after "hide on minimize".
+            // Left-click (or the "Mostrar" menu item) restores it; "Salir" quits.
+            #[cfg(desktop)]
+            {
+                use tauri::menu::{Menu, MenuItem};
+                use tauri::tray::{
+                    MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent,
+                };
+
+                let show =
+                    MenuItem::with_id(app, "show", "Mostrar Enhanced Input", true, None::<&str>)?;
+                let quit = MenuItem::with_id(app, "quit", "Salir", true, None::<&str>)?;
+                let menu = Menu::with_items(app, &[&show, &quit])?;
+
+                let mut tray = TrayIconBuilder::with_id("ei-tray")
+                    .tooltip("Enhanced Input")
+                    .menu(&menu)
+                    .show_menu_on_left_click(false)
+                    .on_menu_event(|app, event| match event.id.as_ref() {
+                        "show" => restore_main(app),
+                        "quit" => app.exit(0),
+                        _ => {}
+                    })
+                    .on_tray_icon_event(|tray, event| {
+                        if let TrayIconEvent::Click {
+                            button: MouseButton::Left,
+                            button_state: MouseButtonState::Up,
+                            ..
+                        } = event
+                        {
+                            restore_main(tray.app_handle());
+                        }
+                    });
+                if let Some(icon) = app.default_window_icon() {
+                    tray = tray.icon(icon.clone());
+                }
+                tray.build(app)?;
+            }
+            Ok(())
+        })
         .manage(AppState { engine, overlay_port })
         .invoke_handler(tauri::generate_handler![
             commands::list_controllers,

@@ -11,6 +11,7 @@ import { ProfilesModal } from "./components/ProfilesModal";
 import { SettingsModal } from "./components/SettingsModal";
 import { ProfileEditor } from "./components/editor/ProfileEditor";
 import { checkForUpdate, type UpdateInfo } from "./lib/updater";
+import { initMinimizeToTray } from "./lib/windowTray";
 
 type Screen = "home" | "editor";
 
@@ -90,6 +91,11 @@ export default function App() {
   // Check for an update once on launch (no-op outside a configured Tauri build).
   useEffect(() => {
     checkForUpdate().then(setUpdate);
+  }, []);
+
+  // Wire up "hide on minimize" (minimize-to-tray). No-op in browser preview.
+  useEffect(() => {
+    initMinimizeToTray();
   }, []);
 
   const handleInstallUpdate = useCallback(async () => {
