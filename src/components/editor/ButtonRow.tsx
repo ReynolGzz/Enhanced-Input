@@ -31,6 +31,7 @@ export function ButtonRow({
           <BindButton
             output={mapping.output}
             onChange={(o) => onChange({ ...mapping, output: o })}
+            target={def.glyph}
           />
           <button
             className={`gear ${showAdv ? "active" : ""}`}

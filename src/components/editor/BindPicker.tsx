@@ -10,13 +10,13 @@ import {
 } from "../../lib/inputs";
 import { Select, NumberSlider } from "../ui";
 
-type Tab = "control" | "keyboard" | "numpad" | "mouse" | "macro";
+type Tab = "mouse" | "keyboard" | "numpad" | "control" | "macro";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "control", label: "Control" },
+  { id: "mouse", label: "Ratón" },
   { id: "keyboard", label: "Teclado" },
   { id: "numpad", label: "Teclado numérico" },
-  { id: "mouse", label: "Ratón" },
+  { id: "control", label: "Control" },
   { id: "macro", label: "Macro" },
 ];
 
@@ -48,31 +48,68 @@ export function targetLabel(o: OutputTarget): string {
   }
 }
 
-function Grid({
-  items,
-  onPick,
-}: {
-  items: { value: string; label: string }[];
-  onPick: (v: string) => void;
-}) {
+function headPrefix(tab: Tab): string {
+  switch (tab) {
+    case "mouse":
+      return "Asignar botón del ratón para";
+    case "keyboard":
+    case "numpad":
+      return "Asignar botón del teclado para";
+    case "control":
+      return "Asignar botón del control para";
+    case "macro":
+      return "Configurar macro para";
+  }
+}
+
+function MouseIcon() {
   return (
-    <div className="bind-grid">
-      {items.map((t) => (
-        <button key={t.value} className="bind-key" onClick={() => onPick(t.value)}>
-          {t.label}
-        </button>
-      ))}
+    <svg viewBox="0 0 16 22" width="13" height="17" fill="none">
+      <rect x="1.5" y="1.5" width="13" height="19" rx="6.5" stroke="currentColor" strokeWidth="1.6" />
+      <line x1="8" y1="2" x2="8" y2="9" stroke="currentColor" strokeWidth="1.4" />
+    </svg>
+  );
+}
+
+function MouseArt() {
+  return (
+    <svg width="128" height="196" viewBox="0 0 150 230" fill="none">
+      <rect x="6" y="6" width="138" height="218" rx="68" fill="var(--bg-elev-2)" stroke="var(--border)" strokeWidth="2.5" />
+      <line x1="75" y1="10" x2="75" y2="96" stroke="var(--border)" strokeWidth="2" />
+      <line x1="6" y1="96" x2="144" y2="96" stroke="var(--border)" strokeWidth="2" />
+      <rect x="66" y="34" width="18" height="44" rx="9" fill="var(--accent)" />
+    </svg>
+  );
+}
+
+function MouseTab({ onPick }: { onPick: (o: OutputTarget) => void }) {
+  const opt = (val: string, label: string) => (
+    <button className="bind-opt" onClick={() => onPick({ kind: "mouse", button: val })}>
+      <span className="bind-opt-ic"><MouseIcon /></span>
+      {label}
+    </button>
+  );
+  return (
+    <div className="mouse-tab">
+      <div className="bind-col">
+        {opt("left", "Botón izquierdo del ratón")}
+        {opt("middle", "Botón central del ratón")}
+        {opt("right", "Botón derecho del ratón")}
+        {opt("x1", "Botón 4 del ratón")}
+        {opt("x2", "Botón 5 del ratón")}
+      </div>
+      <div className="mouse-art">
+        <MouseArt />
+      </div>
+      <div className="bind-col">
+        {opt("wheelup", "Desplazarse hacia arriba")}
+        {opt("wheeldown", "Desplazarse hacia abajo")}
+      </div>
     </div>
   );
 }
 
-function KeyLayout({
-  rows,
-  onPick,
-}: {
-  rows: KeyCell[][];
-  onPick: (v: string) => void;
-}) {
+function KeyLayout({ rows, onPick }: { rows: KeyCell[][]; onPick: (v: string) => void }) {
   return (
     <div className="bind-keyboard">
       {rows.map((row, i) => (
@@ -93,7 +130,41 @@ function KeyLayout({
   );
 }
 
-/// Action picker shared by the simple tabs and the macro step builder.
+function ControlTab({ onPick }: { onPick: (o: OutputTarget) => void }) {
+  return (
+    <div className="ctl-grid">
+      {GAMEPAD_TARGETS.map((t) => (
+        <button
+          key={t.value}
+          className="bind-ctl"
+          onClick={() => onPick({ kind: "gamepad", button: t.value })}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Grid({
+  items,
+  onPick,
+}: {
+  items: { value: string; label: string }[];
+  onPick: (v: string) => void;
+}) {
+  return (
+    <div className="bind-grid">
+      {items.map((t) => (
+        <button key={t.value} className="bind-key" onClick={() => onPick(t.value)}>
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/// Action picker used inside the macro step builder.
 function ActionPicker({
   tab,
   onGamepad,
@@ -212,18 +283,21 @@ function MacroTab({
 
 function BindPicker({
   current,
+  target,
   onPick,
   onClose,
 }: {
   current: OutputTarget;
+  target?: string;
   onPick: (o: OutputTarget) => void;
   onClose: () => void;
 }) {
-  const [tab, setTab] = useState<Tab>(current.kind === "macro" ? "macro" : "control");
+  const [tab, setTab] = useState<Tab>(current.kind === "macro" ? "macro" : "mouse");
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal bind-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="bind-head">
+        <div className="bind-bar">
+          <span className="bind-bumper">LB</span>
           <div className="bind-tabs">
             {TABS.map((t) => (
               <button
@@ -235,9 +309,29 @@ function BindPicker({
               </button>
             ))}
           </div>
+          <span className="bind-bumper">RB</span>
           <button className="bind-close" onClick={onClose} title="Cerrar">
             ✕
           </button>
+        </div>
+
+        {tab !== "macro" && (
+          <div className="bind-headline">
+            {headPrefix(tab)}
+            {target && <span className="bind-target">{target}</span>}
+          </div>
+        )}
+
+        <div className="bind-body">
+          {tab === "mouse" && <MouseTab onPick={onPick} />}
+          {tab === "keyboard" && (
+            <KeyLayout rows={KEYBOARD_ROWS} onPick={(v) => onPick({ kind: "key", code: v })} />
+          )}
+          {tab === "numpad" && (
+            <KeyLayout rows={NUMPAD_ROWS} onPick={(v) => onPick({ kind: "key", code: v })} />
+          )}
+          {tab === "control" && <ControlTab onPick={onPick} />}
+          {tab === "macro" && <MacroTab current={current} onApply={onPick} />}
         </div>
 
         {tab !== "macro" && (
@@ -250,31 +344,21 @@ function BindPicker({
             </button>
           </div>
         )}
-
-        {tab === "macro" ? (
-          <MacroTab current={current} onApply={onPick} />
-        ) : (
-          <div className="bind-body">
-            <ActionPicker
-              tab={tab}
-              onGamepad={(v) => onPick({ kind: "gamepad", button: v })}
-              onKey={(v) => onPick({ kind: "key", code: v })}
-              onMouse={(v) => onPick({ kind: "mouse", button: v })}
-            />
-          </div>
-        )}
       </div>
     </div>
   );
 }
 
 /// A field that shows the current binding and opens the tabbed picker.
+/// `target` is the short label of what's being assigned (shown in the header).
 export function BindButton({
   output,
   onChange,
+  target,
 }: {
   output: OutputTarget;
   onChange: (o: OutputTarget) => void;
+  target?: string;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -285,6 +369,7 @@ export function BindButton({
       {open && (
         <BindPicker
           current={output}
+          target={target}
           onPick={(o) => {
             onChange(o);
             setOpen(false);

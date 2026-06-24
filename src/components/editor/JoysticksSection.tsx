@@ -186,6 +186,7 @@ function StickCard({
           <BindButton
             output={cfg.edgeBinding}
             onChange={(o) => onChange({ ...cfg, edgeBinding: o })}
+            target="anillo"
           />
         </AdvField>
         <AdvField label="Invertir anillo (disparar dentro)">

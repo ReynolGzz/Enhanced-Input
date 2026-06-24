@@ -75,6 +75,7 @@ function TriggerCard({
           <BindButton
             output={cfg.output}
             onChange={(o) => onChange({ ...cfg, output: o })}
+            target={glyph}
           />
         </AdvField>
       </div>
