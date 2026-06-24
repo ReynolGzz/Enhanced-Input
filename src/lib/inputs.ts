@@ -49,6 +49,18 @@ export const GAMEPAD_TARGETS: { value: string; label: string }[] = [
   { value: "right", label: "Cruceta →" },
 ];
 
+// Stick-direction outputs (a button drives a virtual stick direction).
+export const STICK_DIR_TARGETS: { stick: string; dir: string; label: string }[] = [
+  { stick: "l", dir: "up", label: "L ↑" },
+  { stick: "l", dir: "down", label: "L ↓" },
+  { stick: "l", dir: "left", label: "L ←" },
+  { stick: "l", dir: "right", label: "L →" },
+  { stick: "r", dir: "up", label: "R ↑" },
+  { stick: "r", dir: "down", label: "R ↓" },
+  { stick: "r", dir: "left", label: "R ←" },
+  { stick: "r", dir: "right", label: "R →" },
+];
+
 // Keyboard keys you can remap a button to (matches the Rust scancode table).
 export const KEY_TARGETS: { value: string; label: string }[] = [
   ..."abcdefghijklmnopqrstuvwxyz".split("").map((c) => ({ value: c, label: c.toUpperCase() })),

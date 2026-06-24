@@ -7,6 +7,7 @@ import {
   MOUSE_TARGETS,
   KEYBOARD_ROWS,
   NUMPAD_ROWS,
+  STICK_DIR_TARGETS,
   type KeyCell,
 } from "../../lib/inputs";
 import { Select, NumberSlider } from "../ui";
@@ -44,6 +45,12 @@ export function targetLabel(o: OutputTarget): string {
       return `⌨ ${keyLabel.get(o.code) ?? o.code.toUpperCase()}`;
     case "mouse":
       return `🖱 ${mouseLabel.get(o.button) ?? o.button}`;
+    case "stickDir": {
+      const s = o.stick === "r" ? "R" : "L";
+      const d =
+        o.dir === "up" ? "↑" : o.dir === "down" ? "↓" : o.dir === "left" ? "←" : "→";
+      return `${s} ${d}`;
+    }
     case "macro":
       return `🧩 Macro (${o.steps.length})`;
   }
@@ -133,17 +140,31 @@ function KeyLayout({ rows, onPick }: { rows: KeyCell[][]; onPick: (v: string) =>
 
 function ControlTab({ onPick }: { onPick: (o: OutputTarget) => void }) {
   return (
-    <div className="ctl-grid">
-      {GAMEPAD_TARGETS.map((t) => (
-        <button
-          key={t.value}
-          className="bind-ctl"
-          onClick={() => onPick({ kind: "gamepad", button: t.value })}
-        >
-          {t.label}
-        </button>
-      ))}
-    </div>
+    <>
+      <div className="ctl-grid">
+        {GAMEPAD_TARGETS.map((t) => (
+          <button
+            key={t.value}
+            className="bind-ctl"
+            onClick={() => onPick({ kind: "gamepad", button: t.value })}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div className="ctl-sub">Direcciones de stick</div>
+      <div className="ctl-grid">
+        {STICK_DIR_TARGETS.map((t) => (
+          <button
+            key={t.stick + t.dir}
+            className="bind-ctl"
+            onClick={() => onPick({ kind: "stickDir", stick: t.stick, dir: t.dir })}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+    </>
   );
 }
 

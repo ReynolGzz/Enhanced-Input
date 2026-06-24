@@ -308,9 +308,9 @@ impl Engine {
             // 2. Sticks (transform, then stateful smoothing filter).
             let (out_lx, out_ly) = transform::apply_stick(&profile.left_stick, state.lx, state.ly);
             let (out_rx, out_ry) = transform::apply_stick(&profile.right_stick, state.rx, state.ry);
-            let (out_lx, out_ly) =
+            let (mut out_lx, mut out_ly) =
                 apply_smoothing(profile.left_stick.smoothing, &mut smooth_l, &mut rng, out_lx, out_ly);
-            let (out_rx, out_ry) =
+            let (mut out_rx, mut out_ry) =
                 apply_smoothing(profile.right_stick.smoothing, &mut smooth_r, &mut rng, out_rx, out_ry);
 
             // 3. Triggers (analog passthrough by default).
@@ -324,6 +324,7 @@ impl Engine {
             let mut wheel_up = false;
             let mut wheel_down = false;
             let mut pressed_ids: Vec<String> = Vec::new();
+            let (mut ovr_lx, mut ovr_ly, mut ovr_rx, mut ovr_ry) = (0.0f32, 0.0f32, 0.0f32, 0.0f32);
 
             for (id, pressed) in state.buttons.iter() {
                 if pressed {
@@ -378,6 +379,24 @@ impl Engine {
                             }
                         }
                     }
+                    OutputTarget::StickDir { stick, dir } => {
+                        if active {
+                            let (dx, dy) = match dir.as_str() {
+                                "up" => (0.0, 1.0),
+                                "down" => (0.0, -1.0),
+                                "left" => (-1.0, 0.0),
+                                "right" => (1.0, 0.0),
+                                _ => (0.0, 0.0),
+                            };
+                            if stick == "r" {
+                                ovr_rx += dx;
+                                ovr_ry += dy;
+                            } else {
+                                ovr_lx += dx;
+                                ovr_ly += dy;
+                            }
+                        }
+                    }
                     OutputTarget::Macro { steps, trigger } => {
                         // Macros use the raw press (their own trigger semantics),
                         // not the turbo-gated `active`.
@@ -404,6 +423,12 @@ impl Engine {
                     }
                 }
             }
+
+            // 4b. Button-driven stick directions add into the stick output.
+            out_lx = (out_lx + ovr_lx).clamp(-1.0, 1.0);
+            out_ly = (out_ly + ovr_ly).clamp(-1.0, 1.0);
+            out_rx = (out_rx + ovr_rx).clamp(-1.0, 1.0);
+            out_ry = (out_ry + ovr_ry).clamp(-1.0, 1.0);
 
             // 5. Trigger digital remaps (in addition to analog output).
             let lt_pressed = lt >= profile.left_trigger.threshold;
@@ -550,6 +575,8 @@ fn apply_trigger_output(target: &OutputTarget, pressed: bool, out: &mut TriggerO
                 }
             }
         }
+        // Stick-direction outputs aren't wired for triggers; ignore.
+        OutputTarget::StickDir { .. } => {}
         // Macros on triggers are not wired yet; leave the analog channel intact.
         OutputTarget::Macro { .. } => {}
     }

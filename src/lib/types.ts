@@ -35,6 +35,8 @@ export type OutputTarget =
   | { kind: "key"; code: string }
   // button ∈ left|right|middle|x1|x2|wheelup|wheeldown
   | { kind: "mouse"; button: string }
+  // stick ∈ l|r, dir ∈ up|down|left|right (button drives a virtual stick)
+  | { kind: "stickDir"; stick: string; dir: string }
   | { kind: "macro"; steps: MacroStep[]; trigger: MacroTrigger };
 
 export interface StickConfig {

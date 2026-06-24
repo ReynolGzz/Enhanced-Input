@@ -1075,6 +1075,13 @@ input[type="range"]::-webkit-slider-thumb {
   border-color: var(--accent);
   background: var(--bg-elev-2);
 }
+.ctl-sub {
+  color: var(--text-faint);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 16px 2px 8px;
+}
 /* Keyboard / numpad visual layouts */
 .bind-grid {
   display: grid;

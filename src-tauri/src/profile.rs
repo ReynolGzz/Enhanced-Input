@@ -251,6 +251,9 @@ pub enum OutputTarget {
     Key { code: String },
     /// `button` ∈ left|right|middle|x1|x2|wheelup|wheeldown.
     Mouse { button: String },
+    /// Drive a virtual stick direction while held. `stick` ∈ "l"|"r",
+    /// `dir` ∈ "up"|"down"|"left"|"right".
+    StickDir { stick: String, dir: String },
     Macro {
         steps: Vec<MacroStep>,
         #[serde(default)]
