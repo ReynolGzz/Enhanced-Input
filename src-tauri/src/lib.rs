@@ -47,7 +47,11 @@ pub fn run() {
     {
         builder = builder
             .plugin(tauri_plugin_updater::Builder::new().build())
-            .plugin(tauri_plugin_process::init());
+            .plugin(tauri_plugin_process::init())
+            .plugin(tauri_plugin_autostart::init(
+                tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+                None,
+            ));
     }
 
     builder
@@ -70,6 +74,8 @@ pub fn run() {
             commands::engine_status,
             commands::live_preview,
             commands::overlay_url,
+            commands::set_autostart,
+            commands::get_autostart,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Enhanced Input");

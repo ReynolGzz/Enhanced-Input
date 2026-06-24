@@ -149,19 +149,29 @@ function LanguagePane() {
 }
 
 function WindowsPane() {
-  const [autostart, setAutostart] = useState(getBool(WIN_AUTOSTART));
+  const [auto, setAuto] = useState(getBool(WIN_AUTOSTART));
   const [hideMin, setHideMin] = useState(getBool(WIN_HIDE_MIN));
+
+  useEffect(() => {
+    // Reflect the real OS state when available.
+    api.getAutostart().then(setAuto).catch(() => {});
+  }, []);
+
+  const toggleAuto = async (v: boolean) => {
+    setAuto(v);
+    setBool(WIN_AUTOSTART, v);
+    try {
+      await api.setAutostart(v);
+    } catch {
+      /* not under Tauri */
+    }
+  };
+
   return (
     <>
       <p className="sub">Comportamiento de la ventana en Windows.</p>
       <AdvField label="Iniciar al arrancar Windows">
-        <Toggle
-          on={autostart}
-          onChange={(v) => {
-            setAutostart(v);
-            setBool(WIN_AUTOSTART, v);
-          }}
-        />
+        <Toggle on={auto} onChange={toggleAuto} />
       </AdvField>
       <AdvField label="Ocultar al minimizar (a la bandeja)">
         <Toggle

@@ -30,4 +30,6 @@ export const api = {
   engineStatus: () => invoke<EngineStatus>("engine_status"),
   livePreview: () => invoke<LivePreview>("live_preview"),
   overlayUrl: (style: string) => invoke<string>("overlay_url", { style }),
+  setAutostart: (enable: boolean) => invoke<void>("set_autostart", { enable }),
+  getAutostart: () => invoke<boolean>("get_autostart"),
 };

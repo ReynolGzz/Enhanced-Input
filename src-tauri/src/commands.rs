@@ -148,6 +148,21 @@ pub fn live_preview(state: State<'_, AppState>) -> LivePreview {
     state.engine.live()
 }
 
+/// Enable/disable launching the app when Windows starts.
+#[tauri::command]
+pub fn set_autostart(enable: bool, app: tauri::AppHandle) -> Result<(), String> {
+    use tauri_plugin_autostart::ManagerExt;
+    let m = app.autolaunch();
+    if enable { m.enable() } else { m.disable() }.map_err(|e| e.to_string())
+}
+
+/// Whether "launch on startup" is currently enabled.
+#[tauri::command]
+pub fn get_autostart(app: tauri::AppHandle) -> bool {
+    use tauri_plugin_autostart::ManagerExt;
+    app.autolaunch().is_enabled().unwrap_or(false)
+}
+
 /// URL for the OBS streamer overlay (served by the local overlay server).
 #[tauri::command]
 pub fn overlay_url(style: String, state: State<'_, AppState>) -> String {
