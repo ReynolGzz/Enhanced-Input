@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { OutputTarget, MacroAction, MacroStep, MacroTrigger } from "../../lib/types";
+import { api } from "../../lib/api";
 import {
   GAMEPAD_TARGETS,
   KEY_TARGETS,
@@ -206,6 +207,68 @@ function MacroTab({
     setSteps((s) => s.map((st, idx) => (idx === i ? { ...st, ...patch } : st)));
   const removeStep = (i: number) => setSteps((s) => s.filter((_, idx) => idx !== i));
 
+  // --- Recording: poll the live input and turn presses into timed steps. ---
+  const [recording, setRecording] = useState(false);
+  const rec = useRef<{
+    handle: number;
+    events: { id: string; t: number; down: boolean }[];
+    t0: number;
+  } | null>(null);
+
+  const startRec = () => {
+    const t0 = performance.now();
+    const prev = new Set<string>();
+    const events: { id: string; t: number; down: boolean }[] = [];
+    const handle = window.setInterval(async () => {
+      try {
+        const lp = await api.livePreview();
+        const cur = new Set(lp.pressed || []);
+        cur.forEach((id) => {
+          if (!prev.has(id)) events.push({ id, t: performance.now() - t0, down: true });
+        });
+        prev.forEach((id) => {
+          if (!cur.has(id)) events.push({ id, t: performance.now() - t0, down: false });
+        });
+        prev.clear();
+        cur.forEach((id) => prev.add(id));
+      } catch {
+        /* engine not running */
+      }
+    }, 16);
+    rec.current = { handle, events, t0 };
+    setRecording(true);
+  };
+
+  const stopRec = () => {
+    if (rec.current) {
+      clearInterval(rec.current.handle);
+      const r2 = (n: number) => Math.round(n * 100) / 100;
+      const out: MacroStep[] = [];
+      const open: { id: string; t: number }[] = [];
+      let lastUp = 0;
+      for (const e of rec.current.events) {
+        if (e.down) {
+          open.push({ id: e.id, t: e.t });
+        } else {
+          const d = open.find((x) => x.id === e.id);
+          if (d) {
+            const gap = out.length === 0 ? 0 : Math.max(0, d.t - lastUp);
+            out.push({
+              action: { kind: "gamepad", button: d.id },
+              holdMs: r2(e.t - d.t),
+              gapMs: r2(gap),
+            });
+            lastUp = e.t;
+            open.splice(open.indexOf(d), 1);
+          }
+        }
+      }
+      if (out.length) setSteps(out);
+      rec.current = null;
+    }
+    setRecording(false);
+  };
+
   return (
     <div className="macro-tab">
       <div className="macro-controls">
@@ -216,12 +279,26 @@ function MacroTab({
           onChange={(v) => setTrigger(v as MacroTrigger)}
         />
         <button
+          className={`btn ${recording ? "danger" : ""}`}
+          onClick={recording ? stopRec : startRec}
+        >
+          {recording ? "■ Detener" : "● Grabar"}
+        </button>
+        <button className="btn ghost" onClick={() => setSteps([])}>
+          Borrar todo
+        </button>
+        <button
           className="btn primary"
           onClick={() => onApply({ kind: "macro", steps, trigger })}
         >
           Aplicar macro
         </button>
       </div>
+      {recording && (
+        <div className="macro-empty">
+          Grabando… pulsa botones en tu control (requiere el motor en “Iniciar”).
+        </div>
+      )}
 
       <div className="macro-steps">
         {steps.length === 0 && (
