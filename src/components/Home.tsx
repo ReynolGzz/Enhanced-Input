@@ -1,17 +1,6 @@
 import { useState, type ReactNode } from "react";
 import type { ControllerInfo, ProfileSummary, EngineStatus } from "../lib/types";
-
-// Maps a backend controller `kind` (see src-tauri/src/input.rs) to the base
-// filename of its artwork under /public/controllers. Real product photos can be
-// dropped in as `<base>.png`; a generic SVG silhouette is used until then.
-function controllerArtBase(kind: string): string | null {
-  const k = kind.toLowerCase();
-  if (k.includes("dualshock") || k.includes("ds4")) return "dualshock4";
-  if (k.includes("dualsense")) return "dualsense";
-  if (k.includes("xbox") || k.includes("xinput") || k.includes("compatible"))
-    return "xbox";
-  return null;
-}
+import { ControllerSilhouette } from "./ControllerArt";
 
 // <img> that walks a list of candidate sources, advancing on load error, and
 // renders `fallback` once every source has failed. Lets a real PNG take
@@ -67,7 +56,6 @@ export function Home({
   const activeProfile =
     profiles.find((p) => p.id === activeProfileId) ?? profiles[0] ?? null;
   const connLabel = controller?.path.startsWith("xinput:") ? "XInput" : "USB";
-  const artBase = controller ? controllerArtBase(controller.kind) : null;
 
   return (
     <div className="home">
@@ -100,16 +88,9 @@ export function Home({
         {controller ? (
           <div className="controller-row">
             <div className="controller-id">
-              <FallbackImg
-                key={controller.kind}
+              <ControllerSilhouette
+                kind={controller.kind}
                 className="controller-art"
-                sources={
-                  artBase
-                    ? [`/controllers/${artBase}.png`, "/controllers/gamepad.svg"]
-                    : ["/controllers/gamepad.svg"]
-                }
-                alt={controller.kind}
-                fallback={<span className="controller-glyph">🎮</span>}
               />
               <div>
                 <div className="controller-name">{controller.name}</div>
@@ -165,7 +146,12 @@ export function Home({
           </div>
         ) : (
           <div className="empty">
-            <div className="big">🔌</div>
+            <img
+              className="empty-cable"
+              src="/controllers/usb-c.png"
+              alt=""
+              draggable={false}
+            />
             <div>No se detecta ningún mando.</div>
             <div style={{ marginTop: 6, fontSize: 13 }}>
               Conecta tu control y vuelve a intentarlo. Compatible con DualShock 4,
