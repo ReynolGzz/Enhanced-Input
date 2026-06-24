@@ -53,12 +53,29 @@ export function ProfilesModal({
       setImportName("");
       onChanged(p.id);
     });
+  const create = () =>
+    run(async () => {
+      const p = await api.createProfile("");
+      onChanged(p.id);
+    });
   const copy = (text: string) => navigator.clipboard?.writeText(text).catch(() => {});
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal profiles-modal" onClick={(e) => e.stopPropagation()}>
-        <h3>Perfiles</h3>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 12,
+          }}
+        >
+          <h3 style={{ margin: 0 }}>Perfiles</h3>
+          <button className="btn primary sm" onClick={create}>
+            + Nuevo perfil
+          </button>
+        </div>
 
         <div className="profiles-list">
           {profiles.map((p) => (
