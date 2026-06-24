@@ -1,49 +1,54 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { THEMES, applyTheme, getStoredTheme, type ThemeId } from "../lib/theme";
+import {
+  getLang,
+  setLang,
+  getBool,
+  setBool,
+  getStr,
+  setStr,
+  WIN_AUTOSTART,
+  WIN_HIDE_MIN,
+  OVERLAY_STYLE,
+  type Lang,
+} from "../lib/settings";
+import { checkForUpdate, currentVersion, type UpdateInfo } from "../lib/updater";
+import { Select, Toggle, AdvField } from "./ui";
 
-type Section = "appearance" | "overlay" | "windows" | "subscriptions" | "billing";
+type Section = "appearance" | "language" | "overlay" | "windows" | "updates";
 
 const NAV: { group: string; items: { id: Section; label: string }[] }[] = [
   {
     group: "Experiencia",
     items: [
       { id: "appearance", label: "Appearance" },
-      { id: "overlay", label: "Game Overlay" },
-      { id: "windows", label: "Windows" },
+      { id: "language", label: "Language" },
+      { id: "overlay", label: "Streamer overlay" },
     ],
   },
   {
-    group: "Facturación",
+    group: "Sistema",
     items: [
-      { id: "subscriptions", label: "Subscriptions" },
-      { id: "billing", label: "Billing" },
+      { id: "windows", label: "Windows" },
+      { id: "updates", label: "Check for updates" },
     ],
   },
 ];
 
 const TITLES: Record<Section, string> = {
   appearance: "Appearance",
-  overlay: "Game Overlay",
+  language: "Language",
+  overlay: "Streamer overlay",
   windows: "Windows",
-  subscriptions: "Subscriptions",
-  billing: "Billing",
+  updates: "Check for updates",
 };
 
 export function SettingsModal({ onClose }: { onClose: () => void }) {
   const [section, setSection] = useState<Section>("appearance");
-  const [theme, setTheme] = useState<ThemeId>(getStoredTheme());
-
-  const pick = (id: ThemeId) => {
-    setTheme(id);
-    applyTheme(id); // recolors the whole app instantly
-  };
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div
-        className="modal settings-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="modal settings-modal" onClick={(e) => e.stopPropagation()}>
         <div className="settings-side">
           {NAV.map((g) => (
             <div key={g.group}>
@@ -70,55 +75,199 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
           >
             ✕
           </button>
-
-          {section === "appearance" ? (
-            <>
-              <h3>Appearance</h3>
-              <p className="sub">
-                Elige el tema de la aplicación. El control y toda la interfaz se
-                recolorean al instante.
-              </p>
-              <div className="theme-grid">
-                {THEMES.map((t) => (
-                  <button
-                    key={t.id}
-                    className={`theme-card ${theme === t.id ? "sel" : ""}`}
-                    onClick={() => pick(t.id)}
-                  >
-                    <div
-                      className="theme-prev"
-                      style={{ background: t.preview.bg }}
-                    >
-                      <span
-                        className="bar"
-                        style={{ background: t.preview.card }}
-                      />
-                      <span
-                        className="dot"
-                        style={{ background: t.preview.accent }}
-                      />
-                    </div>
-                    <div className="theme-name">
-                      <span>{t.label}</span>
-                      {theme === t.id && (
-                        <span style={{ color: "var(--accent)" }}>✓</span>
-                      )}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </>
-          ) : (
-            <>
-              <h3>{TITLES[section]}</h3>
-              <div className="wip-box">
-                <div className="big">🚧</div>
-                <div>Work in progress — disponible pronto.</div>
-              </div>
-            </>
-          )}
+          <h3>{TITLES[section]}</h3>
+          {section === "appearance" && <AppearancePane />}
+          {section === "language" && <LanguagePane />}
+          {section === "windows" && <WindowsPane />}
+          {section === "updates" && <UpdatesPane />}
+          {section === "overlay" && <OverlayPane />}
         </div>
       </div>
     </div>
+  );
+}
+
+function AppearancePane() {
+  const [theme, setTheme] = useState<ThemeId>(getStoredTheme());
+  const pick = (id: ThemeId) => {
+    setTheme(id);
+    applyTheme(id);
+  };
+  return (
+    <>
+      <p className="sub">
+        Elige el tema. El control y toda la interfaz se recolorean al instante.
+      </p>
+      <div className="theme-grid">
+        {THEMES.map((t) => (
+          <button
+            key={t.id}
+            className={`theme-card ${theme === t.id ? "sel" : ""}`}
+            onClick={() => pick(t.id)}
+          >
+            <div className="theme-prev" style={{ background: t.preview.bg }}>
+              <span className="bar" style={{ background: t.preview.card }} />
+              <span className="dot" style={{ background: t.preview.accent }} />
+            </div>
+            <div className="theme-name">
+              <span>{t.label}</span>
+              {theme === t.id && <span style={{ color: "var(--accent)" }}>✓</span>}
+            </div>
+          </button>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function LanguagePane() {
+  const [lang, setL] = useState<Lang>(getLang());
+  const change = (v: string) => {
+    const l = v as Lang;
+    setL(l);
+    setLang(l);
+  };
+  return (
+    <>
+      <p className="sub">Idioma de la aplicación.</p>
+      <AdvField label="Idioma / Language">
+        <Select
+          value={lang}
+          options={[
+            { value: "es", label: "Español" },
+            { value: "en", label: "English" },
+          ]}
+          onChange={change}
+        />
+      </AdvField>
+      <p className="sub" style={{ marginTop: 14 }}>
+        Las traducciones se irán completando de forma progresiva.
+      </p>
+    </>
+  );
+}
+
+function WindowsPane() {
+  const [autostart, setAutostart] = useState(getBool(WIN_AUTOSTART));
+  const [hideMin, setHideMin] = useState(getBool(WIN_HIDE_MIN));
+  return (
+    <>
+      <p className="sub">Comportamiento de la ventana en Windows.</p>
+      <AdvField label="Iniciar al arrancar Windows">
+        <Toggle
+          on={autostart}
+          onChange={(v) => {
+            setAutostart(v);
+            setBool(WIN_AUTOSTART, v);
+          }}
+        />
+      </AdvField>
+      <AdvField label="Ocultar al minimizar (a la bandeja)">
+        <Toggle
+          on={hideMin}
+          onChange={(v) => {
+            setHideMin(v);
+            setBool(WIN_HIDE_MIN, v);
+          }}
+        />
+      </AdvField>
+    </>
+  );
+}
+
+function UpdatesPane() {
+  const [current, setCurrent] = useState("…");
+  const [checking, setChecking] = useState(false);
+  const [checked, setChecked] = useState(false);
+  const [latest, setLatest] = useState<UpdateInfo | null>(null);
+  const [installing, setInstalling] = useState(false);
+
+  useEffect(() => {
+    currentVersion().then(setCurrent);
+  }, []);
+
+  const check = async () => {
+    setChecking(true);
+    setChecked(false);
+    const u = await checkForUpdate();
+    setLatest(u);
+    setChecked(true);
+    setChecking(false);
+  };
+
+  return (
+    <>
+      <p className="sub">Revisa si tienes la última versión.</p>
+      <AdvField label="Versión actual">
+        <span style={{ color: "var(--text)", fontWeight: 600 }}>v{current}</span>
+      </AdvField>
+      <AdvField label="Última versión">
+        <span style={{ color: "var(--text)", fontWeight: 600 }}>
+          {!checked ? "—" : latest ? `v${latest.version}` : `v${current}`}
+        </span>
+      </AdvField>
+
+      {checked && (
+        <p className="sub" style={{ marginTop: 14 }}>
+          {latest
+            ? "Hay una versión más nueva disponible."
+            : "Estás al día. 🎉"}
+        </p>
+      )}
+
+      <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+        <button className="btn" onClick={check} disabled={checking || installing}>
+          {checking ? "Buscando…" : "Buscar actualizaciones"}
+        </button>
+        {latest && (
+          <button
+            className="btn primary"
+            disabled={installing}
+            onClick={async () => {
+              setInstalling(true);
+              try {
+                await latest.install();
+              } catch {
+                setInstalling(false);
+              }
+            }}
+          >
+            {installing ? "Instalando…" : `Instalar v${latest.version} y reiniciar`}
+          </button>
+        )}
+      </div>
+    </>
+  );
+}
+
+function OverlayPane() {
+  const [style, setStyle] = useState(getStr(OVERLAY_STYLE, "white"));
+  return (
+    <>
+      <p className="sub">
+        Muestra tu control en vivo en OBS (Browser Source). Modelos sin marcas
+        (shell con logo y botones en negro).
+      </p>
+      <AdvField label="Estilo del control">
+        <Select
+          value={style}
+          options={[
+            { value: "white", label: "Blanco (gratis)" },
+            { value: "black", label: "Negro (gratis)" },
+          ]}
+          onChange={(v) => {
+            setStyle(v);
+            setStr(OVERLAY_STYLE, v);
+          }}
+        />
+      </AdvField>
+      <div className="wip-box" style={{ height: "auto", marginTop: 22 }}>
+        <div className="big">🎥</div>
+        <div>
+          El enlace para OBS (Copy Link) se está implementando — quedará
+          funcional muy pronto.
+        </div>
+      </div>
+    </>
   );
 }

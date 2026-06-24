@@ -3,6 +3,7 @@
 // when the updater isn't configured yet.
 import { check } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
+import { getVersion } from "@tauri-apps/api/app";
 
 export interface UpdateInfo {
   version: string;
@@ -27,4 +28,13 @@ export async function checkForUpdate(): Promise<UpdateInfo | null> {
     /* not under Tauri, updater not configured, or offline */
   }
   return null;
+}
+
+/// The installed app version (from tauri.conf). Falls back outside Tauri.
+export async function currentVersion(): Promise<string> {
+  try {
+    return await getVersion();
+  } catch {
+    return "0.1.0";
+  }
 }
