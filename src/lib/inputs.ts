@@ -1,5 +1,10 @@
 // Static metadata describing the controls the editor exposes, plus the
 // option lists used by the bind dropdowns.
+//
+// Labels are resolved through t() at module load; the Language setting reloads
+// the window, so these tables rebuild in the chosen language.
+
+import { t } from "./i18n";
 
 export interface ButtonDef {
   id: string;
@@ -10,24 +15,24 @@ export interface ButtonDef {
 
 // Canonical buttons, Xbox naming (the virtual output is an Xbox 360 pad).
 export const BUTTONS: ButtonDef[] = [
-  { id: "a", label: "Botón A", glyph: "A", group: "face" },
-  { id: "b", label: "Botón B", glyph: "B", group: "face" },
-  { id: "x", label: "Botón X", glyph: "X", group: "face" },
-  { id: "y", label: "Botón Y", glyph: "Y", group: "face" },
-  { id: "lb", label: "Botón superior izquierdo", glyph: "LB", group: "shoulder" },
-  { id: "rb", label: "Botón superior derecho", glyph: "RB", group: "shoulder" },
-  { id: "back", label: "Vista / Atrás", glyph: "⧉", group: "menu" },
-  { id: "start", label: "Menú / Start", glyph: "≡", group: "menu" },
-  { id: "guide", label: "Guía", glyph: "✦", group: "menu" },
-  { id: "ls", label: "Click stick izquierdo (L3)", glyph: "L3", group: "stick" },
-  { id: "rs", label: "Click stick derecho (R3)", glyph: "R3", group: "stick" },
+  { id: "a", label: t("btn.a"), glyph: "A", group: "face" },
+  { id: "b", label: t("btn.b"), glyph: "B", group: "face" },
+  { id: "x", label: t("btn.x"), glyph: "X", group: "face" },
+  { id: "y", label: t("btn.y"), glyph: "Y", group: "face" },
+  { id: "lb", label: t("btn.lb"), glyph: "LB", group: "shoulder" },
+  { id: "rb", label: t("btn.rb"), glyph: "RB", group: "shoulder" },
+  { id: "back", label: t("btn.back"), glyph: "⧉", group: "menu" },
+  { id: "start", label: t("btn.start"), glyph: "≡", group: "menu" },
+  { id: "guide", label: t("btn.guide"), glyph: "✦", group: "menu" },
+  { id: "ls", label: t("btn.ls"), glyph: "L3", group: "stick" },
+  { id: "rs", label: t("btn.rs"), glyph: "R3", group: "stick" },
 ];
 
 export const DPAD: ButtonDef[] = [
-  { id: "up", label: "Cruceta arriba", glyph: "▲", group: "dpad" },
-  { id: "down", label: "Cruceta abajo", glyph: "▼", group: "dpad" },
-  { id: "left", label: "Cruceta izquierda", glyph: "◀", group: "dpad" },
-  { id: "right", label: "Cruceta derecha", glyph: "▶", group: "dpad" },
+  { id: "up", label: t("dpad.up"), glyph: "▲", group: "dpad" },
+  { id: "down", label: t("dpad.down"), glyph: "▼", group: "dpad" },
+  { id: "left", label: t("dpad.left"), glyph: "◀", group: "dpad" },
+  { id: "right", label: t("dpad.right"), glyph: "▶", group: "dpad" },
 ];
 
 // Gamepad targets you can remap a button to.
@@ -40,13 +45,13 @@ export const GAMEPAD_TARGETS: { value: string; label: string }[] = [
   { value: "rb", label: "RB" },
   { value: "ls", label: "L3" },
   { value: "rs", label: "R3" },
-  { value: "back", label: "Vista" },
-  { value: "start", label: "Menú" },
-  { value: "guide", label: "Guía" },
-  { value: "up", label: "Cruceta ↑" },
-  { value: "down", label: "Cruceta ↓" },
-  { value: "left", label: "Cruceta ←" },
-  { value: "right", label: "Cruceta →" },
+  { value: "back", label: t("tgt.view") },
+  { value: "start", label: t("tgt.menu") },
+  { value: "guide", label: t("btn.guide") },
+  { value: "up", label: t("tgt.dpadUp") },
+  { value: "down", label: t("tgt.dpadDown") },
+  { value: "left", label: t("tgt.dpadLeft") },
+  { value: "right", label: t("tgt.dpadRight") },
 ];
 
 // Stick-direction outputs (a button drives a virtual stick direction).
@@ -65,17 +70,17 @@ export const STICK_DIR_TARGETS: { stick: string; dir: string; label: string }[] 
 export const KEY_TARGETS: { value: string; label: string }[] = [
   ..."abcdefghijklmnopqrstuvwxyz".split("").map((c) => ({ value: c, label: c.toUpperCase() })),
   ..."0123456789".split("").map((c) => ({ value: c, label: c })),
-  { value: "space", label: "Espacio" },
+  { value: "space", label: t("key.space") },
   { value: "enter", label: "Enter" },
   { value: "esc", label: "Esc" },
   { value: "tab", label: "Tab" },
   { value: "shift", label: "Shift" },
   { value: "ctrl", label: "Ctrl" },
   { value: "alt", label: "Alt" },
-  { value: "up", label: "Flecha ↑" },
-  { value: "down", label: "Flecha ↓" },
-  { value: "left", label: "Flecha ←" },
-  { value: "right", label: "Flecha →" },
+  { value: "up", label: t("key.arrowUp") },
+  { value: "down", label: t("key.arrowDown") },
+  { value: "left", label: t("key.arrowLeft") },
+  { value: "right", label: t("key.arrowRight") },
   { value: "f1", label: "F1" },
   { value: "f2", label: "F2" },
   { value: "f3", label: "F3" },
@@ -84,35 +89,35 @@ export const KEY_TARGETS: { value: string; label: string }[] = [
 
 // Inner dead zone type (how the center is shaped).
 export const INNER_TYPE_OPTIONS: { value: string; label: string }[] = [
-  { value: "raw", label: "Sin zona muerta (raw)" },
-  { value: "cross", label: "Cruz" },
-  { value: "radial", label: "Circular / radial" },
+  { value: "raw", label: t("inner.raw") },
+  { value: "cross", label: t("inner.cross") },
+  { value: "radial", label: t("inner.radial") },
 ];
 
 // Outer boundary shape.
 export const OUTER_SHAPE_OPTIONS: { value: string; label: string }[] = [
-  { value: "default", label: "Default (círculo nativo)" },
-  { value: "square", label: "Cuadrado" },
-  { value: "circle", label: "Círculo perfecto" },
+  { value: "default", label: t("outer.default") },
+  { value: "square", label: t("outer.square") },
+  { value: "circle", label: t("outer.circle") },
 ];
 
 export const CURVE_OPTIONS: { value: string; label: string }[] = [
-  { value: "linear", label: "Lineal" },
-  { value: "aggressive", label: "Agresiva" },
-  { value: "relaxed", label: "Relajada" },
-  { value: "precision", label: "Precisión" },
-  { value: "custom", label: "Custom" },
+  { value: "linear", label: t("curve.linear") },
+  { value: "aggressive", label: t("curve.aggressive") },
+  { value: "relaxed", label: t("curve.relaxed") },
+  { value: "precision", label: t("curve.precision") },
+  { value: "custom", label: t("curve.custom") },
 ];
 
 // Mouse targets you can remap a control to (matches mouse.rs).
 export const MOUSE_TARGETS: { value: string; label: string }[] = [
-  { value: "left", label: "Click izquierdo" },
-  { value: "right", label: "Click derecho" },
-  { value: "middle", label: "Click central" },
-  { value: "x1", label: "Botón 4" },
-  { value: "x2", label: "Botón 5" },
-  { value: "wheelup", label: "Rueda ↑" },
-  { value: "wheeldown", label: "Rueda ↓" },
+  { value: "left", label: t("mouse.left") },
+  { value: "right", label: t("mouse.right") },
+  { value: "middle", label: t("mouse.middle") },
+  { value: "x1", label: t("mouse.x1") },
+  { value: "x2", label: t("mouse.x2") },
+  { value: "wheelup", label: t("mouse.wheelUp") },
+  { value: "wheeldown", label: t("mouse.wheelDown") },
 ];
 
 // A key on the visual keyboard/numpad layouts. `w` is a relative width unit.
@@ -162,7 +167,7 @@ export const KEYBOARD_ROWS: KeyCell[][] = [
   [
     { value: "ctrl", label: "Ctrl", w: 1.5 },
     { value: "alt", label: "Alt", w: 1.5 },
-    { value: "space", label: "Espacio", w: 6 },
+    { value: "space", label: t("key.space"), w: 6 },
     { value: "ralt", label: "Alt", w: 1.5 },
     { value: "rctrl", label: "Ctrl", w: 1.5 },
   ],

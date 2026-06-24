@@ -11,15 +11,16 @@ import {
   type KeyCell,
 } from "../../lib/inputs";
 import { Select, NumberSlider } from "../ui";
+import { t } from "../../lib/i18n";
 
 type Tab = "mouse" | "keyboard" | "numpad" | "control" | "macro";
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: "mouse", label: "Ratón" },
-  { id: "keyboard", label: "Teclado" },
-  { id: "numpad", label: "Teclado numérico" },
-  { id: "control", label: "Control" },
-  { id: "macro", label: "Macro" },
+  { id: "mouse", label: t("bind.mouse") },
+  { id: "keyboard", label: t("bind.keyboard") },
+  { id: "numpad", label: t("bind.numpad") },
+  { id: "control", label: t("bind.control") },
+  { id: "macro", label: t("bind.macro") },
 ];
 
 const gpLabel = new Map(GAMEPAD_TARGETS.map((t) => [t.value, t.label]));
@@ -36,9 +37,9 @@ function actionLabel(a: MacroAction): string {
 export function targetLabel(o: OutputTarget): string {
   switch (o.kind) {
     case "passthrough":
-      return "Por defecto";
+      return t("bind.default");
     case "none":
-      return "Desactivado";
+      return t("bind.disabled");
     case "gamepad":
       return gpLabel.get(o.button) ?? o.button;
     case "key":
@@ -52,21 +53,21 @@ export function targetLabel(o: OutputTarget): string {
       return `${s} ${d}`;
     }
     case "macro":
-      return `🧩 Macro (${o.steps.length})`;
+      return t("bind.macroN", { n: o.steps.length });
   }
 }
 
 function headPrefix(tab: Tab): string {
   switch (tab) {
     case "mouse":
-      return "Asignar botón del ratón para";
+      return t("bind.assignMouse");
     case "keyboard":
     case "numpad":
-      return "Asignar botón del teclado para";
+      return t("bind.assignKeyboard");
     case "control":
-      return "Asignar botón del control para";
+      return t("bind.assignControl");
     case "macro":
-      return "Configurar macro para";
+      return t("bind.assignMacro");
   }
 }
 
@@ -100,18 +101,18 @@ function MouseTab({ onPick }: { onPick: (o: OutputTarget) => void }) {
   return (
     <div className="mouse-tab">
       <div className="bind-col">
-        {opt("left", "Botón izquierdo del ratón")}
-        {opt("middle", "Botón central del ratón")}
-        {opt("right", "Botón derecho del ratón")}
-        {opt("x1", "Botón 4 del ratón")}
-        {opt("x2", "Botón 5 del ratón")}
+        {opt("left", t("mouse.leftFull"))}
+        {opt("middle", t("mouse.middleFull"))}
+        {opt("right", t("mouse.rightFull"))}
+        {opt("x1", t("mouse.x1Full"))}
+        {opt("x2", t("mouse.x2Full"))}
       </div>
       <div className="mouse-art">
         <MouseArt />
       </div>
       <div className="bind-col">
-        {opt("wheelup", "Desplazarse hacia arriba")}
-        {opt("wheeldown", "Desplazarse hacia abajo")}
+        {opt("wheelup", t("mouse.scrollUp"))}
+        {opt("wheeldown", t("mouse.scrollDown"))}
       </div>
     </div>
   );
@@ -152,7 +153,7 @@ function ControlTab({ onPick }: { onPick: (o: OutputTarget) => void }) {
           </button>
         ))}
       </div>
-      <div className="ctl-sub">Direcciones de stick</div>
+      <div className="ctl-sub">{t("bind.stickDirs")}</div>
       <div className="ctl-grid">
         {STICK_DIR_TARGETS.map((t) => (
           <button
@@ -205,9 +206,9 @@ function ActionPicker({
 }
 
 const TRIGGER_OPTIONS = [
-  { value: "once", label: "Una vez por pulsación" },
-  { value: "whileHeld", label: "Repetir mientras se mantiene" },
-  { value: "toggle", label: "Alternar (toggle)" },
+  { value: "once", label: t("macro.once") },
+  { value: "whileHeld", label: t("macro.whileHeld") },
+  { value: "toggle", label: t("macro.toggle") },
 ];
 
 function MacroTab({
@@ -293,7 +294,7 @@ function MacroTab({
   return (
     <div className="macro-tab">
       <div className="macro-controls">
-        <span className="lbl">Método de disparo</span>
+        <span className="lbl">{t("macro.triggerMethod")}</span>
         <Select
           value={trigger}
           options={TRIGGER_OPTIONS}
@@ -303,33 +304,31 @@ function MacroTab({
           className={`btn ${recording ? "danger" : ""}`}
           onClick={recording ? stopRec : startRec}
         >
-          {recording ? "■ Detener" : "● Grabar"}
+          {recording ? t("macro.stop") : t("macro.record")}
         </button>
         <button className="btn ghost" onClick={() => setSteps([])}>
-          Borrar todo
+          {t("macro.clearAll")}
         </button>
         <button
           className="btn primary"
           onClick={() => onApply({ kind: "macro", steps, trigger })}
         >
-          Aplicar macro
+          {t("macro.apply")}
         </button>
       </div>
       {recording && (
-        <div className="macro-empty">
-          Grabando… pulsa botones en tu control (requiere el motor en “Iniciar”).
-        </div>
+        <div className="macro-empty">{t("macro.recordingHint")}</div>
       )}
 
       <div className="macro-steps">
         {steps.length === 0 && (
-          <div className="macro-empty">Elige acciones abajo para añadir pasos.</div>
+          <div className="macro-empty">{t("macro.empty")}</div>
         )}
         {steps.map((st, i) => (
           <div key={i} className="macro-step">
             <span className="macro-num">{i + 1}</span>
             <span className="macro-action">{actionLabel(st.action)}</span>
-            <span className="lbl">Hold</span>
+            <span className="lbl">{t("macro.hold")}</span>
             <NumberSlider
               value={st.holdMs}
               min={0}
@@ -338,7 +337,7 @@ function MacroTab({
               suffix="ms"
               onChange={(v) => updateStep(i, { holdMs: v })}
             />
-            <span className="lbl">Gap</span>
+            <span className="lbl">{t("macro.gap")}</span>
             <NumberSlider
               value={st.gapMs}
               min={0}
@@ -347,7 +346,7 @@ function MacroTab({
               suffix="ms"
               onChange={(v) => updateStep(i, { gapMs: v })}
             />
-            <button className="bind-close" onClick={() => removeStep(i)} title="Quitar">
+            <button className="bind-close" onClick={() => removeStep(i)} title={t("common.remove")}>
               ✕
             </button>
           </div>
@@ -408,7 +407,7 @@ function BindPicker({
             ))}
           </div>
           <span className="bind-bumper">RB</span>
-          <button className="bind-close" onClick={onClose} title="Cerrar">
+          <button className="bind-close" onClick={onClose} title={t("common.close")}>
             ✕
           </button>
         </div>
@@ -435,10 +434,10 @@ function BindPicker({
         {tab !== "macro" && (
           <div className="bind-quick">
             <button className="chip" onClick={() => onPick({ kind: "passthrough" })}>
-              Por defecto
+              {t("bind.default")}
             </button>
             <button className="chip" onClick={() => onPick({ kind: "none" })}>
-              Desactivado
+              {t("bind.disabled")}
             </button>
           </div>
         )}

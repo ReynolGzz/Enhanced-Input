@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import type { ControllerInfo, ProfileSummary, EngineStatus } from "../lib/types";
 import { ControllerSilhouette } from "./ControllerArt";
+import { t } from "../lib/i18n";
 
 // <img> that walks a list of candidate sources, advancing on load error, and
 // renders `fallback` once every source has failed. Lets a real PNG take
@@ -72,17 +73,17 @@ export function Home({
           </div>
           <div className="home-actions">
             <button className="btn ghost" onClick={onManageProfiles}>
-              Perfiles
+              {t("home.profiles")}
             </button>
-            <button className="icon-btn" onClick={onOpenSettings} title="Ajustes">
+            <button className="icon-btn" onClick={onOpenSettings} title={t("home.settings")}>
               ⚙
             </button>
           </div>
         </div>
 
         <div className="controllers-head">
-          <span>Mando</span>
-          <span style={{ textAlign: "right" }}>Perfil seleccionado</span>
+          <span>{t("home.controller")}</span>
+          <span style={{ textAlign: "right" }}>{t("home.selectedProfile")}</span>
         </div>
 
         {controller ? (
@@ -133,14 +134,14 @@ export function Home({
                 ))}
               </select>
               <button className="btn" onClick={onNewProfile}>
-                Nuevo
+                {t("common.new")}
               </button>
               <button
                 className="btn primary"
                 onClick={onEditProfile}
                 disabled={!activeProfile}
               >
-                Editar
+                {t("common.edit")}
               </button>
             </div>
           </div>
@@ -152,10 +153,9 @@ export function Home({
               alt=""
               draggable={false}
             />
-            <div>No se detecta ningún mando.</div>
+            <div>{t("home.noController")}</div>
             <div style={{ marginTop: 6, fontSize: 13 }}>
-              Conecta tu control y vuelve a intentarlo. Compatible con DualShock 4,
-              DualSense y mandos Xbox / compatibles (GameSir en modo X).
+              {t("home.connectHint")}
             </div>
           </div>
         )}
@@ -164,17 +164,17 @@ export function Home({
       <div className="statusbar">
         <span className="msg">
           {status.running
-            ? `▶ Activo · ${status.message}`
+            ? `${t("home.active")} · ${status.message}`
             : controller
-            ? "Listo. Pulsa Iniciar para transformar la señal."
-            : status.message || "Esperando un mando…"}
+            ? t("home.ready")
+            : status.message || t("home.waiting")}
         </span>
         <button
           className={`btn lg ${status.running ? "danger" : "primary"}`}
           onClick={onToggleEngine}
           disabled={!controller && !status.running}
         >
-          {status.running ? "Detener" : "Iniciar"}
+          {status.running ? t("home.stop") : t("home.start")}
         </button>
       </div>
     </div>

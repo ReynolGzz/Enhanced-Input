@@ -12,6 +12,7 @@ import { SettingsModal } from "./components/SettingsModal";
 import { ProfileEditor } from "./components/editor/ProfileEditor";
 import { checkForUpdate, type UpdateInfo } from "./lib/updater";
 import { initMinimizeToTray } from "./lib/windowTray";
+import { t } from "./lib/i18n";
 
 type Screen = "home" | "editor";
 
@@ -193,13 +194,13 @@ export default function App() {
 
   const updateBanner = update && (
     <div className="update-banner">
-      <span>✨ Actualización disponible (v{update.version}).</span>
+      <span>{t("update.available", { v: update.version })}</span>
       <div style={{ display: "flex", gap: 8 }}>
         <button className="btn ghost sm" onClick={() => setUpdate(null)} disabled={updating}>
-          Después
+          {t("common.later")}
         </button>
         <button className="btn primary sm" onClick={handleInstallUpdate} disabled={updating}>
-          {updating ? "Instalando…" : "Instalar y reiniciar"}
+          {updating ? t("update.installing") : t("update.installRestart")}
         </button>
       </div>
     </div>
@@ -253,24 +254,24 @@ export default function App() {
       {showNew && (
         <div className="modal-backdrop" onClick={() => setShowNew(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Nuevo perfil</h3>
+            <h3>{t("profile.new")}</h3>
             <div className="field-row">
-              <label>Nombre</label>
+              <label>{t("common.name")}</label>
               <input
                 className="input"
                 autoFocus
                 value={newName}
-                placeholder="p. ej. Rocket League"
+                placeholder={t("profile.namePlaceholder")}
                 onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCreate()}
               />
             </div>
             <div className="row-actions">
               <button className="btn ghost" onClick={() => setShowNew(false)}>
-                Cancelar
+                {t("common.cancel")}
               </button>
               <button className="btn primary" onClick={handleCreate}>
-                Crear
+                {t("common.create")}
               </button>
             </div>
           </div>

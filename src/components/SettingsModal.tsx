@@ -15,33 +15,34 @@ import {
 import { checkForUpdate, currentVersion, type UpdateInfo } from "../lib/updater";
 import { api } from "../lib/api";
 import { Select, Toggle, AdvField } from "./ui";
+import { t } from "../lib/i18n";
 
 type Section = "appearance" | "language" | "overlay" | "windows" | "updates";
 
 const NAV: { group: string; items: { id: Section; label: string }[] }[] = [
   {
-    group: "Experiencia",
+    group: t("set.group.experience"),
     items: [
-      { id: "appearance", label: "Appearance" },
-      { id: "language", label: "Language" },
-      { id: "overlay", label: "Streamer overlay" },
+      { id: "appearance", label: t("set.appearance") },
+      { id: "language", label: t("set.language") },
+      { id: "overlay", label: t("set.overlay") },
     ],
   },
   {
-    group: "Sistema",
+    group: t("set.group.system"),
     items: [
-      { id: "windows", label: "Windows" },
-      { id: "updates", label: "Check for updates" },
+      { id: "windows", label: t("set.windows") },
+      { id: "updates", label: t("set.updates") },
     ],
   },
 ];
 
 const TITLES: Record<Section, string> = {
-  appearance: "Appearance",
-  language: "Language",
-  overlay: "Streamer overlay",
-  windows: "Windows",
-  updates: "Check for updates",
+  appearance: t("set.appearance"),
+  language: t("set.language"),
+  overlay: t("set.overlay"),
+  windows: t("set.windows"),
+  updates: t("set.updates"),
 };
 
 export function SettingsModal({ onClose }: { onClose: () => void }) {
@@ -96,9 +97,7 @@ function AppearancePane() {
   };
   return (
     <>
-      <p className="sub">
-        Elige el tema. El control y toda la interfaz se recolorean al instante.
-      </p>
+      <p className="sub">{t("set.appearance.desc")}</p>
       <div className="theme-grid">
         {THEMES.map((t) => (
           <button
@@ -125,13 +124,16 @@ function LanguagePane() {
   const [lang, setL] = useState<Lang>(getLang());
   const change = (v: string) => {
     const l = v as Lang;
+    if (l === lang) return;
     setL(l);
     setLang(l);
+    // Reload so every t() call (and the label tables) rebuild in the new language.
+    setTimeout(() => location.reload(), 120);
   };
   return (
     <>
-      <p className="sub">Idioma de la aplicación.</p>
-      <AdvField label="Idioma / Language">
+      <p className="sub">{t("set.lang.desc")}</p>
+      <AdvField label={t("set.lang.field")}>
         <Select
           value={lang}
           options={[
@@ -142,7 +144,7 @@ function LanguagePane() {
         />
       </AdvField>
       <p className="sub" style={{ marginTop: 14 }}>
-        Las traducciones se irán completando de forma progresiva.
+        {t("set.lang.note")}
       </p>
     </>
   );
@@ -169,11 +171,11 @@ function WindowsPane() {
 
   return (
     <>
-      <p className="sub">Comportamiento de la ventana en Windows.</p>
-      <AdvField label="Iniciar al arrancar Windows">
+      <p className="sub">{t("set.win.desc")}</p>
+      <AdvField label={t("set.win.autostart")}>
         <Toggle on={auto} onChange={toggleAuto} />
       </AdvField>
-      <AdvField label="Ocultar al minimizar (a la bandeja)">
+      <AdvField label={t("set.win.hideMin")}>
         <Toggle
           on={hideMin}
           onChange={(v) => {
@@ -208,11 +210,11 @@ function UpdatesPane() {
 
   return (
     <>
-      <p className="sub">Revisa si tienes la última versión.</p>
-      <AdvField label="Versión actual">
+      <p className="sub">{t("set.upd.desc")}</p>
+      <AdvField label={t("set.upd.current")}>
         <span style={{ color: "var(--text)", fontWeight: 600 }}>v{current}</span>
       </AdvField>
-      <AdvField label="Última versión">
+      <AdvField label={t("set.upd.latest")}>
         <span style={{ color: "var(--text)", fontWeight: 600 }}>
           {!checked ? "—" : latest ? `v${latest.version}` : `v${current}`}
         </span>
@@ -220,15 +222,13 @@ function UpdatesPane() {
 
       {checked && (
         <p className="sub" style={{ marginTop: 14 }}>
-          {latest
-            ? "Hay una versión más nueva disponible."
-            : "Estás al día. 🎉"}
+          {latest ? t("set.upd.newer") : t("set.upd.uptodate")}
         </p>
       )}
 
       <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
         <button className="btn" onClick={check} disabled={checking || installing}>
-          {checking ? "Buscando…" : "Buscar actualizaciones"}
+          {checking ? t("set.upd.checking") : t("set.upd.check")}
         </button>
         {latest && (
           <button
@@ -243,7 +243,7 @@ function UpdatesPane() {
               }
             }}
           >
-            {installing ? "Instalando…" : `Instalar v${latest.version} y reiniciar`}
+            {installing ? t("set.upd.installing") : t("set.upd.install", { v: latest.version })}
           </button>
         )}
       </div>
@@ -270,16 +270,13 @@ function OverlayPane() {
 
   return (
     <>
-      <p className="sub">
-        Muestra tu control en vivo en OBS (Browser Source). Modelos sin marcas
-        (blanco o negro); fondo transparente.
-      </p>
-      <AdvField label="Estilo del control">
+      <p className="sub">{t("set.ov.desc")}</p>
+      <AdvField label={t("set.ov.style")}>
         <Select
           value={style}
           options={[
-            { value: "white", label: "Blanco (gratis)" },
-            { value: "black", label: "Negro (gratis)" },
+            { value: "white", label: t("set.ov.white") },
+            { value: "black", label: t("set.ov.black") },
           ]}
           onChange={(v) => {
             setStyle(v);
@@ -290,10 +287,10 @@ function OverlayPane() {
 
       <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 18 }}>
         <button className="btn primary" onClick={copy}>
-          Copy Link (OBS)
+          {t("set.ov.copy")}
         </button>
         {copied && (
-          <span style={{ color: "var(--accent)", fontSize: 13 }}>¡Copiado!</span>
+          <span style={{ color: "var(--accent)", fontSize: 13 }}>{t("set.ov.copied")}</span>
         )}
       </div>
 
@@ -308,8 +305,7 @@ function OverlayPane() {
       )}
 
       <p className="sub" style={{ marginTop: 14 }}>
-        En OBS: <b>Fuentes → + → Navegador</b> y pega el enlace. Los botones se
-        iluminan en vivo mientras el motor (Iniciar) está activo.
+        {t("set.ov.helpPre")}<b>{t("set.ov.helpBold")}</b>{t("set.ov.helpPost")}
       </p>
     </>
   );

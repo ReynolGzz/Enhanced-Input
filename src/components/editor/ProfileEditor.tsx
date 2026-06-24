@@ -4,14 +4,15 @@ import { api } from "../../lib/api";
 import { ButtonsSection, DpadSection } from "./ButtonsSection";
 import { TriggersSection } from "./TriggersSection";
 import { JoysticksSection } from "./JoysticksSection";
+import { t } from "../../lib/i18n";
 
 type Section = "buttons" | "dpad" | "triggers" | "sticks";
 
 const NAV: { id: Section; label: string; icon: string }[] = [
-  { id: "buttons", label: "Botones", icon: "A" },
-  { id: "dpad", label: "Cruceta", icon: "✛" },
-  { id: "triggers", label: "Gatillos", icon: "LT" },
-  { id: "sticks", label: "Joysticks", icon: "◉" },
+  { id: "buttons", label: t("editor.buttons"), icon: "A" },
+  { id: "dpad", label: t("editor.dpad"), icon: "✛" },
+  { id: "triggers", label: t("editor.triggers"), icon: "LT" },
+  { id: "sticks", label: t("editor.sticks"), icon: "◉" },
 ];
 
 export function ProfileEditor({
@@ -52,7 +53,7 @@ export function ProfileEditor({
     <div className="editor">
       <aside className="editor-sidebar">
         <div className="profile-head">
-          <div className="kicker">Ajustes del mando para</div>
+          <div className="kicker">{t("editor.settingsFor")}</div>
           <div className="pname">
             <span
               className="color-chip"
@@ -91,12 +92,12 @@ export function ProfileEditor({
 
       <div className="statusbar" style={{ gridArea: "actionbar" }}>
         <button className="btn ghost" onClick={onBack}>
-          ← Volver
+          {t("editor.back")}
         </button>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          {dirty && <span className="msg">Cambios sin guardar</span>}
+          {dirty && <span className="msg">{t("editor.unsaved")}</span>}
           <button className="btn primary" onClick={onSave} disabled={!dirty}>
-            Guardar perfil
+            {t("editor.save")}
           </button>
         </div>
       </div>

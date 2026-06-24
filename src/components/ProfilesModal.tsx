@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ProfileSummary } from "../lib/types";
 import { api } from "../lib/api";
+import { t } from "../lib/i18n";
 
 /// Manage profiles: create, rename, duplicate, delete, and share via codes.
 export function ProfilesModal({
@@ -71,9 +72,9 @@ export function ProfilesModal({
             marginBottom: 12,
           }}
         >
-          <h3 style={{ margin: 0 }}>Perfiles</h3>
+          <h3 style={{ margin: 0 }}>{t("profiles.title")}</h3>
           <button className="btn primary sm" onClick={create}>
-            + Nuevo perfil
+            {t("profiles.newProfile")}
           </button>
         </div>
 
@@ -93,7 +94,7 @@ export function ProfilesModal({
               ) : (
                 <span className="profiles-name">
                   {p.name}
-                  {p.id === activeId && <span className="badge">activo</span>}
+                  {p.id === activeId && <span className="badge">{t("profiles.activeBadge")}</span>}
                 </span>
               )}
               <div className="profiles-actions">
@@ -104,20 +105,20 @@ export function ProfilesModal({
                     setRenameText(p.name);
                   }}
                 >
-                  Renombrar
+                  {t("profiles.rename")}
                 </button>
                 <button className="btn ghost sm" onClick={() => duplicate(p.id)}>
-                  Duplicar
+                  {t("profiles.duplicate")}
                 </button>
                 <button className="btn ghost sm" onClick={() => doExport(p.id)}>
-                  Exportar
+                  {t("profiles.export")}
                 </button>
                 <button
                   className="btn danger sm"
                   disabled={profiles.length <= 1}
                   onClick={() => remove(p.id)}
                 >
-                  Borrar
+                  {t("common.delete")}
                 </button>
               </div>
             </div>
@@ -126,37 +127,37 @@ export function ProfilesModal({
 
         {exportCode && (
           <div className="share-box">
-            <div className="lbl">Código para compartir (cópialo y pásaselo a quien quieras):</div>
+            <div className="lbl">{t("profiles.shareCode")}</div>
             <div className="share-row">
               <input className="input" readOnly value={exportCode} />
               <button className="btn" onClick={() => copy(exportCode)}>
-                Copiar
+                {t("common.copy")}
               </button>
               <button className="btn ghost" onClick={() => setExportCode(null)}>
-                Cerrar
+                {t("common.close")}
               </button>
             </div>
           </div>
         )}
 
         <div className="share-box">
-          <div className="lbl">Importar un perfil desde un código</div>
+          <div className="lbl">{t("profiles.importTitle")}</div>
           <div className="share-row">
             <input
               className="input"
-              placeholder="Pega aquí el código (EIP1…)"
+              placeholder={t("profiles.importPlaceholder")}
               value={importCode}
               onChange={(e) => setImportCode(e.target.value)}
             />
             <input
               className="input"
               style={{ maxWidth: 160 }}
-              placeholder="Nombre (opcional)"
+              placeholder={t("profiles.nameOptional")}
               value={importName}
               onChange={(e) => setImportName(e.target.value)}
             />
             <button className="btn primary" disabled={!importCode.trim()} onClick={doImport}>
-              Importar
+              {t("profiles.import")}
             </button>
           </div>
         </div>
@@ -165,7 +166,7 @@ export function ProfilesModal({
 
         <div className="row-actions">
           <button className="btn ghost" onClick={onClose}>
-            Cerrar
+            {t("common.close")}
           </button>
         </div>
       </div>

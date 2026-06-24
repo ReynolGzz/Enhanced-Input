@@ -3,6 +3,7 @@ import type { ButtonMapping } from "../../lib/types";
 import type { ButtonDef } from "../../lib/inputs";
 import { NumberSlider, Toggle, AdvField } from "../ui";
 import { BindButton } from "./BindPicker";
+import { t } from "../../lib/i18n";
 
 function pillClass(def: ButtonDef): string {
   if (def.group === "face") return `pill face-${def.id}`;
@@ -36,7 +37,7 @@ export function ButtonRow({
           <button
             className={`gear ${showAdv ? "active" : ""}`}
             onClick={() => setShowAdv((s) => !s)}
-            title="Opciones avanzadas"
+            title={t("buttons.advanced")}
           >
             ⚙
           </button>
@@ -45,7 +46,7 @@ export function ButtonRow({
       {showAdv && (
         <div className="advanced">
           <div className="adv-grid">
-            <AdvField label="Turbo (mantener para repetir)">
+            <AdvField label={t("buttons.turbo")}>
               <Toggle
                 on={mapping.turbo}
                 onChange={(v) => onChange({ ...mapping, turbo: v })}
@@ -53,7 +54,7 @@ export function ButtonRow({
             </AdvField>
             {mapping.turbo && (
               <>
-                <AdvField label="Velocidad de turbo">
+                <AdvField label={t("buttons.turboRate")}>
                   <NumberSlider
                     value={mapping.turboRateHz}
                     min={1}
@@ -63,7 +64,7 @@ export function ButtonRow({
                     onChange={(v) => onChange({ ...mapping, turboRateHz: v })}
                   />
                 </AdvField>
-                <AdvField label="Disable regular pressing (turbo desde el primer toque)">
+                <AdvField label={t("buttons.disableRegular")}>
                   <Toggle
                     on={mapping.disableRegularPress}
                     onChange={(v) =>

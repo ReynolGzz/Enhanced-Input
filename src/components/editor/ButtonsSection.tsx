@@ -3,6 +3,7 @@ import { DEFAULT_MAPPING } from "../../lib/types";
 import { BUTTONS, DPAD } from "../../lib/inputs";
 import type { ButtonDef } from "../../lib/inputs";
 import { ButtonRow } from "./ButtonRow";
+import { t } from "../../lib/i18n";
 
 function useButtonSetter(profile: Profile, onChange: (p: Profile) => void) {
   return (id: string, mapping: ButtonMapping) =>
@@ -39,22 +40,19 @@ export function ButtonsSection({
 
   return (
     <div>
-      <h2 className="section-title">Botones</h2>
-      <p className="section-desc">
-        Reasigna cualquier botón a otro botón del mando, una tecla o el ratón.
-        Activa turbo en el engranaje.
-      </p>
+      <h2 className="section-title">{t("editor.buttons")}</h2>
+      <p className="section-desc">{t("buttons.desc")}</p>
 
-      <div className="group-label">Botones delanteros</div>
+      <div className="group-label">{t("buttons.face")}</div>
       {rows(face, profile, set)}
 
-      <div className="group-label">Botones superiores frontales</div>
+      <div className="group-label">{t("buttons.shoulder")}</div>
       {rows(shoulder, profile, set)}
 
-      <div className="group-label">Botones de menú</div>
+      <div className="group-label">{t("buttons.menu")}</div>
       {rows(menu, profile, set)}
 
-      <div className="group-label">Clicks de joystick</div>
+      <div className="group-label">{t("buttons.stick")}</div>
       {rows(stick, profile, set)}
     </div>
   );
@@ -70,9 +68,9 @@ export function DpadSection({
   const set = useButtonSetter(profile, onChange);
   return (
     <div>
-      <h2 className="section-title">Cruceta</h2>
-      <p className="section-desc">Reasigna cada dirección de la cruceta.</p>
-      <div className="group-label">Direcciones</div>
+      <h2 className="section-title">{t("editor.dpad")}</h2>
+      <p className="section-desc">{t("dpad.desc")}</p>
+      <div className="group-label">{t("dpad.directions")}</div>
       {rows(DPAD, profile, set)}
     </div>
   );

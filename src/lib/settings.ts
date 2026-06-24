@@ -11,7 +11,11 @@ export const OVERLAY_STYLE = "ei.overlay.style"; // "white" | "black"
 
 export function getLang(): Lang {
   try {
-    return localStorage.getItem(LANG_KEY) === "en" ? "en" : "es";
+    const stored = localStorage.getItem(LANG_KEY);
+    if (stored === "en" || stored === "es") return stored;
+    // First run: autodetect from the OS/browser, default to English.
+    const nav = typeof navigator !== "undefined" ? navigator.language : "en";
+    return nav && nav.toLowerCase().startsWith("es") ? "es" : "en";
   } catch {
     return "es";
   }

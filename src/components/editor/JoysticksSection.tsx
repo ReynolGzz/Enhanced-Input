@@ -14,6 +14,7 @@ import {
 } from "../../lib/inputs";
 import { Select, Slider, NumberSlider, Toggle, AdvField } from "../ui";
 import { BindButton } from "./BindPicker";
+import { t } from "../../lib/i18n";
 
 const R = 85; // visualizer radius in px (container is 180px)
 
@@ -100,21 +101,21 @@ function StickCard({
         <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 2 }}>
           {label}
         </div>
-        <AdvField label="Tipo de zona muerta (interior)">
+        <AdvField label={t("sticks.innerType")}>
           <Select
             value={cfg.innerType}
             options={INNER_TYPE_OPTIONS}
             onChange={(v) => onChange({ ...cfg, innerType: v as InnerDeadzone })}
           />
         </AdvField>
-        <AdvField label="Forma exterior">
+        <AdvField label={t("sticks.outerShape")}>
           <Select
             value={cfg.outerShape}
             options={OUTER_SHAPE_OPTIONS}
             onChange={(v) => onChange({ ...cfg, outerShape: v as OuterShape })}
           />
         </AdvField>
-        <AdvField label="Zona muerta interior">
+        <AdvField label={t("sticks.innerDeadzone")}>
           <NumberSlider
             value={cfg.innerDeadzone * 100}
             min={0}
@@ -124,7 +125,7 @@ function StickCard({
             onChange={(v) => onChange({ ...cfg, innerDeadzone: v / 100 })}
           />
         </AdvField>
-        <AdvField label="Rango exterior (100% = rango completo)">
+        <AdvField label={t("sticks.outerRange")}>
           <NumberSlider
             value={cfg.outerRange * 100}
             min={0}
@@ -134,7 +135,7 @@ function StickCard({
             onChange={(v) => onChange({ ...cfg, outerRange: v / 100 })}
           />
         </AdvField>
-        <AdvField label="Sensibilidad">
+        <AdvField label={t("sticks.sensitivity")}>
           <NumberSlider
             value={cfg.sensitivity}
             min={0.1}
@@ -144,7 +145,7 @@ function StickCard({
             onChange={(v) => onChange({ ...cfg, sensitivity: v })}
           />
         </AdvField>
-        <AdvField label="Anti zona muerta (anillo exterior)">
+        <AdvField label={t("sticks.antiDeadzone")}>
           <NumberSlider
             value={cfg.antiDeadzone * 100}
             min={0}
@@ -154,7 +155,7 @@ function StickCard({
             onChange={(v) => onChange({ ...cfg, antiDeadzone: v / 100 })}
           />
         </AdvField>
-        <AdvField label="Curva de respuesta">
+        <AdvField label={t("common.curve")}>
           <Select
             value={cfg.curve}
             options={CURVE_OPTIONS}
@@ -162,7 +163,7 @@ function StickCard({
           />
         </AdvField>
         {cfg.curve === "custom" && (
-          <AdvField label="Exponente de la curva">
+          <AdvField label={t("common.curveExp")}>
             <NumberSlider
               value={cfg.curveExponent}
               min={CURVE_EXPONENT_MIN}
@@ -172,7 +173,7 @@ function StickCard({
             />
           </AdvField>
         )}
-        <AdvField label="Edge binding radius (anillo exterior, 0–32767)">
+        <AdvField label={t("sticks.edgeRadius")}>
           <NumberSlider
             value={cfg.edgeRadius}
             min={0}
@@ -182,20 +183,20 @@ function StickCard({
             onChange={(v) => onChange({ ...cfg, edgeRadius: v })}
           />
         </AdvField>
-        <AdvField label="Binding del anillo exterior">
+        <AdvField label={t("sticks.edgeBinding")}>
           <BindButton
             output={cfg.edgeBinding}
             onChange={(o) => onChange({ ...cfg, edgeBinding: o })}
-            target="anillo"
+            target={t("sticks.ring")}
           />
         </AdvField>
-        <AdvField label="Invertir anillo (disparar dentro)">
+        <AdvField label={t("sticks.edgeInvert")}>
           <Toggle
             on={cfg.edgeInvert}
             onChange={(v) => onChange({ ...cfg, edgeInvert: v })}
           />
         </AdvField>
-        <AdvField label="Suavizado (smoothing −10…10)">
+        <AdvField label={t("sticks.smoothing")}>
           <Slider
             value={cfg.smoothing}
             min={-10}
@@ -205,10 +206,10 @@ function StickCard({
             format={(v) => `${Math.round(v)}`}
           />
         </AdvField>
-        <AdvField label="Invertir eje X">
+        <AdvField label={t("sticks.invertX")}>
           <Toggle on={cfg.invertX} onChange={(v) => onChange({ ...cfg, invertX: v })} />
         </AdvField>
-        <AdvField label="Invertir eje Y">
+        <AdvField label={t("sticks.invertY")}>
           <Toggle on={cfg.invertY} onChange={(v) => onChange({ ...cfg, invertY: v })} />
         </AdvField>
       </div>
@@ -227,14 +228,10 @@ export function JoysticksSection({
 }) {
   return (
     <div>
-      <h2 className="section-title">Joysticks</h2>
-      <p className="section-desc">
-        Combina el tipo de zona muerta interior con la forma exterior, ajusta
-        sensibilidad, curva, suavizado y más. El punto azul es la señal de salida
-        en tiempo real.
-      </p>
+      <h2 className="section-title">{t("editor.sticks")}</h2>
+      <p className="section-desc">{t("sticks.desc")}</p>
       <StickCard
-        label="Joystick izquierdo"
+        label={t("sticks.left")}
         cfg={profile.leftStick}
         onChange={(c) => onChange({ ...profile, leftStick: c })}
         inX={live?.inLx ?? 0}
@@ -243,7 +240,7 @@ export function JoysticksSection({
         outY={live?.outLy ?? 0}
       />
       <StickCard
-        label="Joystick derecho"
+        label={t("sticks.right")}
         cfg={profile.rightStick}
         onChange={(c) => onChange({ ...profile, rightStick: c })}
         inX={live?.inRx ?? 0}
