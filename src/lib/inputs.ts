@@ -201,4 +201,15 @@ export const NUMPAD_ROWS: KeyCell[][] = [
     { value: "end", label: "End" },
     { value: "pagedown", label: "PgDn" },
   ],
+  [
+    { value: "prevtrack", label: "⏮" },
+    { value: "playpause", label: "⏯" },
+    { value: "mediastop", label: "⏹" },
+    { value: "nexttrack", label: "⏭" },
+  ],
+  [
+    { value: "voldown", label: "🔉" },
+    { value: "volmute", label: "🔇" },
+    { value: "volup", label: "🔊" },
+  ],
 ];

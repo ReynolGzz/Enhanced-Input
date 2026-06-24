@@ -431,16 +431,12 @@ impl Engine {
             // 6. Diff keyboard state and inject edges.
             for key in desired_keys.iter() {
                 if !held_keys.contains(key) {
-                    if let Some((sc, ext)) = crate::keyboard::scancode(key) {
-                        crate::keyboard::send_key(sc, ext, true);
-                    }
+                    crate::keyboard::send(key, true);
                 }
             }
             for key in held_keys.iter() {
                 if !desired_keys.contains(key) {
-                    if let Some((sc, ext)) = crate::keyboard::scancode(key) {
-                        crate::keyboard::send_key(sc, ext, false);
-                    }
+                    crate::keyboard::send(key, false);
                 }
             }
             held_keys = desired_keys;
@@ -499,9 +495,7 @@ impl Engine {
 
         // Release any keys / mouse buttons still held when stopping.
         for key in held_keys.iter() {
-            if let Some((sc, ext)) = crate::keyboard::scancode(key) {
-                crate::keyboard::send_key(sc, ext, false);
-            }
+            crate::keyboard::send(key, false);
         }
         for b in held_mouse.iter() {
             crate::mouse::send_mouse_button(b, false);

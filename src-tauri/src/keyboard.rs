@@ -119,6 +119,34 @@ pub fn scancode(name: &str) -> Option<(u16, bool)> {
     Some(code)
 }
 
+/// Media / volume keys are "consumer controls": send them as virtual-key codes,
+/// not scan codes. Returns the VK code for those names.
+pub fn vk(name: &str) -> Option<u16> {
+    match name.trim().to_ascii_lowercase().as_str() {
+        "playpause" | "mediaplaypause" => Some(0xB3),
+        "mediastop" => Some(0xB2),
+        "prevtrack" => Some(0xB1),
+        "nexttrack" => Some(0xB0),
+        "volmute" | "mute" => Some(0xAD),
+        "voldown" => Some(0xAE),
+        "volup" => Some(0xAF),
+        _ => None,
+    }
+}
+
+/// Send a key by name, choosing a scan code or a virtual key automatically.
+#[cfg(windows)]
+pub fn send(name: &str, down: bool) {
+    if let Some((sc, ext)) = scancode(name) {
+        send_key(sc, ext, down);
+    } else if let Some(code) = vk(name) {
+        send_vk(code, down);
+    }
+}
+
+#[cfg(not(windows))]
+pub fn send(_name: &str, _down: bool) {}
+
 #[cfg(windows)]
 pub fn send_key(scan: u16, extended: bool, down: bool) {
     use windows::Win32::UI::Input::KeyboardAndMouse::{
@@ -148,6 +176,33 @@ pub fn send_key(scan: u16, extended: bool, down: bool) {
         },
     };
 
+    unsafe {
+        SendInput(&[input], std::mem::size_of::<INPUT>() as i32);
+    }
+}
+
+#[cfg(windows)]
+fn send_vk(vk: u16, down: bool) {
+    use windows::Win32::UI::Input::KeyboardAndMouse::{
+        SendInput, INPUT, INPUT_0, INPUT_KEYBOARD, KEYBDINPUT, KEYBD_EVENT_FLAGS,
+        KEYEVENTF_KEYUP, VIRTUAL_KEY,
+    };
+    let mut flags: u32 = 0;
+    if !down {
+        flags |= KEYEVENTF_KEYUP.0;
+    }
+    let input = INPUT {
+        r#type: INPUT_KEYBOARD,
+        Anonymous: INPUT_0 {
+            ki: KEYBDINPUT {
+                wVk: VIRTUAL_KEY(vk),
+                wScan: 0,
+                dwFlags: KEYBD_EVENT_FLAGS(flags),
+                time: 0,
+                dwExtraInfo: 0,
+            },
+        },
+    };
     unsafe {
         SendInput(&[input], std::mem::size_of::<INPUT>() as i32);
     }
